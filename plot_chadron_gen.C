@@ -14,6 +14,8 @@ const char* energy_abbr[energy_bins] = {"5_41", "10_100", "10_110", "18_110", "1
 
 static int cno = 0;
 
+const int MaxVarbin = 10;
+
 class PlotHadron
 {
   private:
@@ -27,30 +29,35 @@ class PlotHadron
     int sys_eA_option;
     int energy_eA_option;
 
-    TH1D* h1d_nevt_ep[Q2bin][xbin];
-    TH1D* h1d_nevt_w_charm_ep[Q2bin][xbin];
+    int var_option; // as function of x or nu
+    int varbin;
+    const char* var_latex;
+    const char* var_abbr;
+    double var_lo[MaxVarbin];
+    double var_hi[MaxVarbin];
 
-    TH1D* h1d_nevt_eA[Q2bin][xbin];
-    TH1D* h1d_nevt_w_charm_eA[Q2bin][xbin];
+    TH1D* h1d_nevt_ep[Q2bin][MaxVarbin];
+    TH1D* h1d_nevt_w_charm_ep[Q2bin][MaxVarbin];
+
+    TH1D* h1d_nevt_eA[Q2bin][MaxVarbin];
+    TH1D* h1d_nevt_w_charm_eA[Q2bin][MaxVarbin];
 
     // event diagnostic
     TGraphErrors* g_incl_eA_over_ep[Q2bin];
     TGraphErrors* g_charm_eA_over_ep[Q2bin];
 
-    TH2D* h2d_hadron_pt_vs_eta_gen_ep[Q2bin][xbin];
-    TH2D* h2d_hadron_z_vs_eta_gen_ep[Q2bin][xbin];
-    TH2D* h2d_hadron_nu_vs_eta_gen_ep[Q2bin][xbin];
+    TH2D* h2d_hadron_pt_vs_eta_gen_ep[Q2bin][MaxVarbin];
+    TH2D* h2d_hadron_z_vs_eta_gen_ep[Q2bin][MaxVarbin];
 
-    TH2D* h2d_hadron_pt_vs_eta_gen_eA[Q2bin][xbin];
-    TH2D* h2d_hadron_z_vs_eta_gen_eA[Q2bin][xbin];
-    TH2D* h2d_hadron_nu_vs_eta_gen_eA[Q2bin][xbin];
+    TH2D* h2d_hadron_pt_vs_eta_gen_eA[Q2bin][MaxVarbin];
+    TH2D* h2d_hadron_z_vs_eta_gen_eA[Q2bin][MaxVarbin];
 
-    TH1D* h1d_hadron_z_in_eta_gen_ep[Q2bin][xbin][etabin];
-    TH1D* h1d_hadron_z_in_eta_gen_eA[Q2bin][xbin][etabin];
-    TH1D* h1d_hadron_z_in_eta_gen_ratio[Q2bin][xbin][etabin];
+    TH1D* h1d_hadron_z_in_eta_gen_ep[Q2bin][MaxVarbin][etabin];
+    TH1D* h1d_hadron_z_in_eta_gen_eA[Q2bin][MaxVarbin][etabin];
+    TH1D* h1d_hadron_z_in_eta_gen_ratio[Q2bin][MaxVarbin][etabin];
 
   public:
-    PlotHadron(int _hadron_id, int _sys_ep_option, int _energy_ep_option, int _sys_eA_option, int _energy_eA_option)
+    PlotHadron(int _hadron_id, int _sys_ep_option, int _energy_ep_option, int _sys_eA_option, int _energy_eA_option, int _var_option)
     {
       cout << "Constructing plotting module to study hadronization of particle with ID " << _hadron_id << endl;
       hadron_id = abs(_hadron_id);
@@ -97,6 +104,33 @@ class PlotHadron
       sys_eA_option = _sys_eA_option;
       energy_eA_option = _energy_eA_option;
       cout << "Equivalent \"e+A\" system (numerator): " << sys_name[sys_eA_option] << " @ " << energy_name[energy_eA_option] << endl;
+
+      var_option = _var_option;
+      cout << "Making plot in Q2 and ";
+      if (var_option==0)
+      {
+        varbin = xbin;
+        var_latex = "x";
+        var_abbr = "x";
+        for (int ivar = 0; ivar < varbin; ++ivar)
+        {
+          var_lo[ivar] = x_lo[ivar];
+          var_hi[ivar] = x_hi[ivar];
+        }
+      } 
+      else
+      {
+        varbin = nubin;
+        var_latex = "#nu";
+        var_abbr = "nu";
+        for (int ivar = 0; ivar < varbin; ++ivar)
+        {
+          var_lo[ivar] = nu_lo[ivar];
+          var_hi[ivar] = nu_hi[ivar];
+        }
+      }
+      
+      cout << var_abbr << " bins" << endl;
     }
 
     virtual ~PlotHadron() { };
@@ -105,25 +139,25 @@ class PlotHadron
     {
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
           // e+p
-          h1d_nevt_ep[iQ2][ix] = (TH1D*)fin_ep->Get(Form("h1d_nevt_%d_%d",iQ2,ix));
-          h1d_nevt_ep[iQ2][ix]->SetName(Form("h1d_nevt_ep_Q2%d_x%d",sys_abbr[sys_ep_option],energy_abbr[energy_ep_option],iQ2,ix));
+          h1d_nevt_ep[iQ2][ivar] = (TH1D*)fin_ep->Get(Form("h1d_nevt_in_%s_%d_%d",var_abbr,iQ2,ivar));
+          h1d_nevt_ep[iQ2][ivar]->SetName(Form("h1d_nevt_ep_Q2%d_%s%d",sys_abbr[sys_ep_option],energy_abbr[energy_ep_option],iQ2,var_abbr,ivar));
 
-          h1d_nevt_w_charm_ep[iQ2][ix] = (TH1D*)fin_ep->Get(Form("h1d_nevt_w_charm_%d_%d",iQ2,ix));
-          h1d_nevt_w_charm_ep[iQ2][ix]->SetName(Form("h1d_nevt_w_charm_ep_Q2%d_x%d",sys_abbr[sys_ep_option],energy_abbr[energy_ep_option],iQ2,ix));
+          h1d_nevt_w_charm_ep[iQ2][ivar] = (TH1D*)fin_ep->Get(Form("h1d_nevt_w_charm_in_%s_%d_%d",var_abbr,iQ2,ivar));
+          h1d_nevt_w_charm_ep[iQ2][ivar]->SetName(Form("h1d_nevt_w_charm_ep_Q2%d_%s%d",sys_abbr[sys_ep_option],energy_abbr[energy_ep_option],iQ2,var_abbr,ivar));
 
-          cout << "ep # of inclusive events vs charm events is " << h1d_nevt_ep[iQ2][ix]->Integral() << " vs " << h1d_nevt_w_charm_ep[iQ2][ix]->Integral() << " in (Q2, x) bin (" << iQ2 << ", " << ix << ")" <<endl;
+          cout << "ep # of inclusive events vs charm events is " << h1d_nevt_ep[iQ2][ivar]->Integral() << " vs " << h1d_nevt_w_charm_ep[iQ2][ivar]->Integral() << " in (Q2," << var_abbr << ") bin (" << iQ2 << ", " << ivar << ")" <<endl;
 
           // e+A
-          h1d_nevt_eA[iQ2][ix] = (TH1D*)fin_eA->Get(Form("h1d_nevt_%d_%d",iQ2,ix));
-          h1d_nevt_eA[iQ2][ix]->SetName(Form("h1d_nevt_eA_Q2%d_x%d",sys_abbr[sys_eA_option],energy_abbr[energy_eA_option],iQ2,ix));
+          h1d_nevt_eA[iQ2][ivar] = (TH1D*)fin_eA->Get(Form("h1d_nevt_in_%s_%d_%d",var_abbr,iQ2,ivar));
+          h1d_nevt_eA[iQ2][ivar]->SetName(Form("h1d_nevt_eA_Q2%d_%s%d",sys_abbr[sys_eA_option],energy_abbr[energy_eA_option],iQ2,var_abbr,ivar));
 
-          h1d_nevt_w_charm_eA[iQ2][ix] = (TH1D*)fin_eA->Get(Form("h1d_nevt_w_charm_%d_%d",iQ2,ix));
-          h1d_nevt_w_charm_eA[iQ2][ix]->SetName(Form("h1d_nevt_w_charm_eA_Q2%d_x%d",sys_abbr[sys_eA_option],energy_abbr[energy_eA_option],iQ2,ix));
+          h1d_nevt_w_charm_eA[iQ2][ivar] = (TH1D*)fin_eA->Get(Form("h1d_nevt_w_charm_in_%s_%d_%d",var_abbr,iQ2,ivar));
+          h1d_nevt_w_charm_eA[iQ2][ivar]->SetName(Form("h1d_nevt_w_charm_eA_Q2%d_%s%d",sys_abbr[sys_eA_option],energy_abbr[energy_eA_option],iQ2,var_abbr,ivar));
 
-          cout << "eA # of inclusive events vs charm events is " << h1d_nevt_eA[iQ2][ix]->Integral() << " vs " << h1d_nevt_w_charm_eA[iQ2][ix]->Integral() << " in (Q2, x) bin (" << iQ2 << ", " << ix << ")" <<endl;
+          cout << "eA # of inclusive events vs charm events is " << h1d_nevt_eA[iQ2][ivar]->Integral() << " vs " << h1d_nevt_w_charm_eA[iQ2][ivar]->Integral() << " in (Q2," << var_abbr << ") bin (" << iQ2 << ", " << ivar << ")" <<endl;
         }
       }
     }
@@ -132,27 +166,21 @@ class PlotHadron
     {
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
           // e+p
-          h2d_hadron_z_vs_eta_gen_ep[iQ2][ix] = (TH2D*)fin_ep->Get(Form("h2d_hadron_%d_z_vs_eta_gen_%d_%d",hadron_id,iQ2,ix));
-          h2d_hadron_z_vs_eta_gen_ep[iQ2][ix]->SetName(Form("h2d_hadron_%d_z_vs_eta_gen_ep_Q2%d_x%d",hadron_id,iQ2,ix));
+          h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar] = (TH2D*)fin_ep->Get(Form("h2d_hadron_%d_z_vs_eta_gen_in_%s_%d_%d",hadron_id,var_abbr,iQ2,ivar));
+          h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar]->SetName(Form("h2d_hadron_%d_z_vs_eta_gen_ep_Q2%d_%s%d",hadron_id,iQ2,var_abbr,ivar));
 
-          h2d_hadron_pt_vs_eta_gen_ep[iQ2][ix] = (TH2D*)fin_ep->Get(Form("h2d_hadron_%d_pt_vs_eta_gen_%d_%d",hadron_id,iQ2,ix));
-          h2d_hadron_pt_vs_eta_gen_ep[iQ2][ix]->SetName(Form("h2d_hadron_%d_pt_vs_eta_gen_ep_Q2%d_x%d",hadron_id,iQ2,ix));
-
-          h2d_hadron_nu_vs_eta_gen_ep[iQ2][ix] = (TH2D*)fin_ep->Get(Form("h2d_hadron_%d_nu_vs_eta_gen_%d_%d",hadron_id,iQ2,ix));
-          h2d_hadron_nu_vs_eta_gen_ep[iQ2][ix]->SetName(Form("h2d_hadron_%d_nu_vs_eta_gen_ep_Q2%d_x%d",hadron_id,iQ2,ix));
+          h2d_hadron_pt_vs_eta_gen_ep[iQ2][ivar] = (TH2D*)fin_ep->Get(Form("h2d_hadron_%d_pt_vs_eta_gen_in_%s_%d_%d",hadron_id,var_abbr,iQ2,ivar));
+          h2d_hadron_pt_vs_eta_gen_ep[iQ2][ivar]->SetName(Form("h2d_hadron_%d_pt_vs_eta_gen_ep_Q2%d_%s%d",hadron_id,iQ2,var_abbr,ivar));
 
           // e+A
-          h2d_hadron_z_vs_eta_gen_eA[iQ2][ix] = (TH2D*)fin_eA->Get(Form("h2d_hadron_%d_z_vs_eta_gen_%d_%d",hadron_id,iQ2,ix));
-          h2d_hadron_z_vs_eta_gen_eA[iQ2][ix]->SetName(Form("h2d_hadron_%d_z_vs_eta_gen_eA_Q2%d_x%d",hadron_id,iQ2,ix));
+          h2d_hadron_z_vs_eta_gen_eA[iQ2][ivar] = (TH2D*)fin_eA->Get(Form("h2d_hadron_%d_z_vs_eta_gen_in_%s_%d_%d",hadron_id,var_abbr,iQ2,ivar));
+          h2d_hadron_z_vs_eta_gen_eA[iQ2][ivar]->SetName(Form("h2d_hadron_%d_z_vs_eta_gen_eA_Q2%d_%s%d",hadron_id,iQ2,var_abbr,ivar));
 
-          h2d_hadron_pt_vs_eta_gen_eA[iQ2][ix] = (TH2D*)fin_eA->Get(Form("h2d_hadron_%d_pt_vs_eta_gen_%d_%d",hadron_id,iQ2,ix));
-          h2d_hadron_pt_vs_eta_gen_eA[iQ2][ix]->SetName(Form("h2d_hadron_%d_pt_vs_eta_gen_eA_Q2%d_x%d",hadron_id,iQ2,ix));
-
-          h2d_hadron_nu_vs_eta_gen_eA[iQ2][ix] = (TH2D*)fin_eA->Get(Form("h2d_hadron_%d_nu_vs_eta_gen_%d_%d",hadron_id,iQ2,ix));
-          h2d_hadron_nu_vs_eta_gen_eA[iQ2][ix]->SetName(Form("h2d_hadron_%d_nu_vs_eta_gen_eA_Q2%d_x%d",hadron_id,iQ2,ix));
+          h2d_hadron_pt_vs_eta_gen_eA[iQ2][ivar] = (TH2D*)fin_eA->Get(Form("h2d_hadron_%d_pt_vs_eta_gen_in_%s_%d_%d",hadron_id,var_abbr,iQ2,ivar));
+          h2d_hadron_pt_vs_eta_gen_eA[iQ2][ivar]->SetName(Form("h2d_hadron_%d_pt_vs_eta_gen_eA_Q2%d_%s%d",hadron_id,iQ2,var_abbr,ivar));
         }
       }
     }
@@ -161,65 +189,75 @@ class PlotHadron
     {
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
           float norm_ep = 1, norm_eA = 1;
           if (option==0)
           {
-            if (iQ2==0 && ix==0) cout << "Normlaize using inclusive DIS events" << endl;
-            norm_ep = 1.0/h1d_nevt_ep[iQ2][ix]->Integral();
-            norm_eA = 1.0/h1d_nevt_eA[iQ2][ix]->Integral();
+            if (iQ2==0 && ivar==0) cout << "Normlaize using inclusive DIS events" << endl;
+            norm_ep = 1.0/h1d_nevt_ep[iQ2][ivar]->Integral();
+            norm_eA = 1.0/h1d_nevt_eA[iQ2][ivar]->Integral();
           }
           else
           {
-            if (iQ2==0 && ix==0) cout << "Normlaize using events containing charm" << endl;
-            norm_ep = 1.0/h1d_nevt_w_charm_ep[iQ2][ix]->Integral();
-            norm_eA = 1.0/h1d_nevt_w_charm_eA[iQ2][ix]->Integral();
+            if (iQ2==0 && ivar==0) cout << "Normlaize using events containing charm" << endl;
+            norm_ep = 1.0/h1d_nevt_w_charm_ep[iQ2][ivar]->Integral();
+            norm_eA = 1.0/h1d_nevt_w_charm_eA[iQ2][ivar]->Integral();
           }
 
           // e+p
-          h2d_hadron_z_vs_eta_gen_ep[iQ2][ix]->Scale(norm_ep);
-          h2d_hadron_pt_vs_eta_gen_ep[iQ2][ix]->Scale(norm_ep);
-          h2d_hadron_nu_vs_eta_gen_ep[iQ2][ix]->Scale(norm_ep);
+          h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar]->Scale(norm_ep);
+          h2d_hadron_pt_vs_eta_gen_ep[iQ2][ivar]->Scale(norm_ep);
 
           // e+A
-          h2d_hadron_z_vs_eta_gen_eA[iQ2][ix]->Scale(norm_eA);
-          h2d_hadron_nu_vs_eta_gen_eA[iQ2][ix]->Scale(norm_eA);
+          h2d_hadron_z_vs_eta_gen_eA[iQ2][ivar]->Scale(norm_eA);
+          h2d_hadron_pt_vs_eta_gen_eA[iQ2][ivar]->Scale(norm_eA);
         }
       }
     }
 
     void PlotEvents()
     {
-      double logx_mid[xbin-1] = {0}; // last xbin is inclusive bin, skip it here
-      double logx_mid_err[xbin-1] = {0};
-      for (int ix = 0; ix < xbin-1; ++ix)
+      double var_mid[varbin-1] = {0}; // last varbin is inclusive bin, skip it here
+      double var_mid_err[varbin-1] = {0};
+      for (int ivar = 0; ivar < varbin-1; ++ivar)
       {
-        double logx_lo = log10(x_lo[ix]);
-        double logx_hi = log10(x_hi[ix]);
-        logx_mid[ix] = 0.5*(logx_lo+logx_hi);
-        logx_mid_err[ix] = 0.5*(logx_hi-logx_lo);
+        if (var_option==0)
+        {
+          double logx_lo = log10(x_lo[ivar]);
+          double logx_hi = log10(x_hi[ivar]);
+          double logx_mid = 0.5*(logx_lo+logx_hi);
+          double logx_mid_err = 0.5*(logx_hi-logx_lo);
+
+          var_mid[ivar] = logx_mid;
+          var_mid_err[ivar] = logx_mid_err;
+        }
+        else
+        {
+          var_mid[ivar] = 0.5*(nu_lo[ivar]+nu_hi[ivar]);
+          var_mid_err[ivar] = 0.5*(nu_hi[ivar]-nu_lo[ivar]);
+        }
       }
       
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        double incl_ratio[xbin-1] = {0};
-        double incl_ratio_err[xbin-1] = {0};
-        double charm_ratio[xbin-1] = {0};
-        double charm_ratio_err[xbin-1] = {0};
-        for (int ix = 0; ix < xbin-1; ++ix)
+        double incl_ratio[varbin-1] = {0};
+        double incl_ratio_err[varbin-1] = {0};
+        double charm_ratio[varbin-1] = {0};
+        double charm_ratio_err[varbin-1] = {0};
+        for (int ivar = 0; ivar < varbin-1; ++ivar)
         {
-          incl_ratio[ix] = (double)h1d_nevt_eA[iQ2][ix]->GetEntries()/h1d_nevt_ep[iQ2][ix]->GetEntries();
-          incl_ratio_err[ix] = incl_ratio[ix]*sqrt(1.0/h1d_nevt_eA[iQ2][ix]->GetEntries()+1.0/h1d_nevt_ep[iQ2][ix]->GetEntries());
+          incl_ratio[ivar] = (double)h1d_nevt_eA[iQ2][ivar]->GetEntries()/h1d_nevt_ep[iQ2][ivar]->GetEntries();
+          incl_ratio_err[ivar] = incl_ratio[ivar]*sqrt(1.0/h1d_nevt_eA[iQ2][ivar]->GetEntries()+1.0/h1d_nevt_ep[iQ2][ivar]->GetEntries());
 
-          charm_ratio[ix] = (double)h1d_nevt_w_charm_eA[iQ2][ix]->GetEntries()/h1d_nevt_w_charm_ep[iQ2][ix]->GetEntries();
-          charm_ratio_err[ix] = charm_ratio[ix]*sqrt(1.0/h1d_nevt_w_charm_eA[iQ2][ix]->GetEntries()+1.0/h1d_nevt_w_charm_ep[iQ2][ix]->GetEntries());
+          charm_ratio[ivar] = (double)h1d_nevt_w_charm_eA[iQ2][ivar]->GetEntries()/h1d_nevt_w_charm_ep[iQ2][ivar]->GetEntries();
+          charm_ratio_err[ivar] = charm_ratio[ivar]*sqrt(1.0/h1d_nevt_w_charm_eA[iQ2][ivar]->GetEntries()+1.0/h1d_nevt_w_charm_ep[iQ2][ivar]->GetEntries());
 
-          cout << logx_mid[ix] << " inclusive ratio " << incl_ratio[ix] << " charm ratio " << charm_ratio[ix] << endl;
+          cout << var_mid[ivar] << " inclusive ratio " << incl_ratio[ivar] << " charm ratio " << charm_ratio[ivar] << endl;
         }
 
-        g_incl_eA_over_ep[iQ2] = new TGraphErrors(xbin-1,logx_mid,incl_ratio,logx_mid_err,incl_ratio_err);
-        g_charm_eA_over_ep[iQ2] = new TGraphErrors(xbin-1,logx_mid,charm_ratio,logx_mid_err,charm_ratio_err);
+        g_incl_eA_over_ep[iQ2] = new TGraphErrors(varbin-1,var_mid,incl_ratio,var_mid_err,incl_ratio_err);
+        g_charm_eA_over_ep[iQ2] = new TGraphErrors(varbin-1,var_mid,charm_ratio,var_mid_err,charm_ratio_err);
       }
       
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
@@ -262,7 +300,7 @@ class PlotHadron
           TLatex* tl = new TLatex();
           tl->SetTextAlign(11);
           tl->SetTextSize(0.03);
-          tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
+          tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < %s < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],var_latex,var_lo[ivar],var_hi[ivar]));
 
           gROOT->ProcessLine( Form("cc%d->Print(\"figs/event_ratio_%d.pdf\")", cno-1, iQ2) );
 
@@ -277,7 +315,7 @@ class PlotHadron
     {
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
           mclogz(cno++);
           {
@@ -293,14 +331,15 @@ class PlotHadron
             htemp->GetYaxis()->SetTitle(Form("#eta^{%s}",hadron_latex));
             myhset(htemp,1.2,1.6,0.05,0.045);
 
-            h2d_hadron_z_vs_eta_gen_ep[iQ2][ix]->Draw("samecolz");
+            h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar]->Draw("samecolz");
             
             TLatex* tl = new TLatex();
             tl->SetTextAlign(11);
             tl->SetTextSize(0.03);
-            tl->DrawLatexNDC(0.21,0.85,Form("%s @ %s, %.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",sys_name[sys_ep_option],energy_name[energy_ep_option],Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
+            tl->DrawLatexNDC(0.21,0.85,Form("%s @ %s",sys_name[sys_ep_option],energy_name[energy_ep_option]));
+            tl->DrawLatexNDC(0.21,0.80,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < %s < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],var_latex,var_lo[ivar],var_hi[ivar]));
 
-            gROOT->ProcessLine( Form("cc%d->Print(\"figs/ep_%s_z_vs_eta_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ix) );
+            gROOT->ProcessLine( Form("cc%d->Print(\"figs/ep_%s_z_vs_eta_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ivar) );
 
             delete htemp;
             delete tl;
@@ -320,42 +359,15 @@ class PlotHadron
             htemp->GetYaxis()->SetTitle(Form("#eta^{%s}",hadron_latex));
             myhset(htemp,1.2,1.6,0.05,0.045);
 
-            h2d_hadron_pt_vs_eta_gen_ep[iQ2][ix]->Draw("samecolz");
-            
-            TLatex* tl = new TLatex();
-            tl->SetTextAlign(11);
-            tl->SetTextSize(0.03);
-            tl->DrawLatexNDC(0.21,0.85,Form("%s @ %s, %.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",sys_name[sys_ep_option],energy_name[energy_ep_option],Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
-
-            gROOT->ProcessLine( Form("cc%d->Print(\"figs/ep_%s_pt_vs_eta_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ix) );
-
-            delete htemp;
-            delete tl;
-          }
-
-          mclogz(cno++);
-          {
-            float plot_xrange_lo = 0;
-            float plot_xrange_hi = 2500;
-
-            float plot_yrange_lo = eta_lo[0];
-            float plot_yrange_hi = eta_hi[etabin-1];
-
-            TH2F* htemp = new TH2F("htemp","",10,plot_xrange_lo,plot_xrange_hi,10,plot_yrange_lo,plot_yrange_hi);
-            htemp->Draw();
-            htemp->GetXaxis()->SetTitle("#nu");
-            htemp->GetYaxis()->SetTitle(Form("#eta^{%s}",hadron_latex));
-            myhset(htemp,1.2,1.6,0.05,0.045);
-
-            h2d_hadron_nu_vs_eta_gen_ep[iQ2][ix]->Draw("samecolz");
+            h2d_hadron_pt_vs_eta_gen_ep[iQ2][ivar]->Draw("samecolz");
             
             TLatex* tl = new TLatex();
             tl->SetTextAlign(11);
             tl->SetTextSize(0.03);
             tl->DrawLatexNDC(0.21,0.85,Form("%s @ %s",sys_name[sys_ep_option],energy_name[energy_ep_option]));
-            tl->DrawLatexNDC(0.21,0.80,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
+            tl->DrawLatexNDC(0.21,0.80,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < %s < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],var_latex,var_lo[ivar],var_hi[ivar]));
 
-            gROOT->ProcessLine( Form("cc%d->Print(\"figs/ep_%s_nu_vs_eta_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ix) );
+            gROOT->ProcessLine( Form("cc%d->Print(\"figs/ep_%s_pt_vs_eta_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ivar) );
 
             delete htemp;
             delete tl;
@@ -368,33 +380,33 @@ class PlotHadron
     { // make sure slice_lo/hi are double before slicing
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
           for (int ieta = 0; ieta < etabin; ++ieta)
           {
-            h2d_hadron_z_vs_eta_gen_ep[iQ2][ix]->GetYaxis()->SetRangeUser(eta_lo[ieta], eta_hi[ieta]);
-            h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta] = (TH1D*)h2d_hadron_z_vs_eta_gen_ep[iQ2][ix]->ProjectionX( Form("h1d_hadron_%d_z_in_eta_gen_ep_Q2%d_x%d_eta%d",hadron_id,iQ2,ix,ieta) );
+            h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar]->GetYaxis()->SetRangeUser(eta_lo[ieta], eta_hi[ieta]);
+            h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta] = (TH1D*)h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar]->ProjectionX( Form("h1d_hadron_%d_z_in_eta_gen_ep_Q2%d_x%d_eta%d",hadron_id,iQ2,ivar,ieta) );
 
-            h2d_hadron_z_vs_eta_gen_eA[iQ2][ix]->GetYaxis()->SetRangeUser(eta_lo[ieta], eta_hi[ieta]);
-            h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta] = (TH1D*)h2d_hadron_z_vs_eta_gen_eA[iQ2][ix]->ProjectionX( Form("h1d_hadron_%d_z_in_eta_gen_eA_Q2%d_x%d_eta%d",hadron_id,iQ2,ix,ieta) );
+            h2d_hadron_z_vs_eta_gen_eA[iQ2][ivar]->GetYaxis()->SetRangeUser(eta_lo[ieta], eta_hi[ieta]);
+            h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta] = (TH1D*)h2d_hadron_z_vs_eta_gen_eA[iQ2][ivar]->ProjectionX( Form("h1d_hadron_%d_z_in_eta_gen_eA_Q2%d_x%d_eta%d",hadron_id,iQ2,ivar,ieta) );
 
-            h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->Rebin();
-            h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->Rebin();
+            h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->Rebin();
+            h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->Rebin();
 
-            h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->Rebin();
-            h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->Rebin();
+            h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->Rebin();
+            h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->Rebin();
           }
 
           // set back to the original range
-          h2d_hadron_z_vs_eta_gen_ep[iQ2][ix]->GetYaxis()->SetRangeUser(eta_lo[0],eta_hi[etabin-1]);
-          h2d_hadron_z_vs_eta_gen_eA[iQ2][ix]->GetYaxis()->SetRangeUser(eta_lo[0],eta_hi[etabin-1]);
+          h2d_hadron_z_vs_eta_gen_ep[iQ2][ivar]->GetYaxis()->SetRangeUser(eta_lo[0],eta_hi[etabin-1]);
+          h2d_hadron_z_vs_eta_gen_eA[iQ2][ivar]->GetYaxis()->SetRangeUser(eta_lo[0],eta_hi[etabin-1]);
 
           // set ratio hists
           for (int ieta = 0; ieta < etabin; ++ieta)
           {
-            h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta] = (TH1D*)h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->Clone();
-            h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetName( Form("h1d_hadron_%d_z_in_eta_gen_ratio_Q2%d_x%d_eta%d",hadron_id,iQ2,ix,ieta) );
-            h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->Divide(h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]);
+            h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta] = (TH1D*)h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->Clone();
+            h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetName( Form("h1d_hadron_%d_z_in_eta_gen_ratio_Q2%d_x%d_eta%d",hadron_id,iQ2,ivar,ieta) );
+            h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->Divide(h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]);
           }
         }
       }
@@ -408,9 +420,9 @@ class PlotHadron
       {
         if (iQ2<Q2bin-1) continue;
 
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
-          if (ix<xbin-1) continue;
+          if (ivar<varbin-1) continue;
 
           for (int ieta = 0; ieta < etabin; ++ieta)
           {
@@ -421,8 +433,8 @@ class PlotHadron
               float plot_xrange_lo = 0;
               float plot_xrange_hi = 1;
 
-              float plot_yrange_lo = 0.5*h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->GetMinimum();
-              float plot_yrange_hi = 1.8*h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->GetMaximum();
+              float plot_yrange_lo = 0.5*h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->GetMinimum();
+              float plot_yrange_hi = 1.8*h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->GetMaximum();
 
               TH2F* htemp = new TH2F("htemp","",10,plot_xrange_lo,plot_xrange_hi,10,plot_yrange_lo,plot_yrange_hi);
               htemp->Draw();
@@ -436,29 +448,29 @@ class PlotHadron
               leg->SetFillStyle(0);
               leg->SetMargin(0.1);
 
-              h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->SetMarkerSize(0.7);
-              h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->SetMarkerStyle(21);
-              h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->SetLineColor(kBlack);
-              h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->SetMarkerColor(kBlack);
-              h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->Draw("same");
-              leg->AddEntry(h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta],Form("%s @ %s",sys_name[sys_ep_option],energy_name[energy_ep_option]),"lp");
+              h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->SetMarkerSize(0.7);
+              h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->SetMarkerStyle(21);
+              h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->SetLineColor(kBlack);
+              h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->SetMarkerColor(kBlack);
+              h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->Draw("same");
+              leg->AddEntry(h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta],Form("%s @ %s",sys_name[sys_ep_option],energy_name[energy_ep_option]),"lp");
 
-              h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->SetMarkerSize(0.7);
-              h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->SetMarkerStyle(21);
-              h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->SetLineColor(kRed);
-              h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->SetMarkerColor(kRed);
-              h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->Draw("same");
-              leg->AddEntry(h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta],Form("%s @ %s",sys_name[sys_eA_option],energy_name[energy_eA_option]),"lp");
+              h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->SetMarkerSize(0.7);
+              h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->SetMarkerStyle(21);
+              h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->SetLineColor(kRed);
+              h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->SetMarkerColor(kRed);
+              h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->Draw("same");
+              leg->AddEntry(h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta],Form("%s @ %s",sys_name[sys_eA_option],energy_name[energy_eA_option]),"lp");
               
               leg->Draw("same");
 
               TLatex* tl = new TLatex();
               tl->SetTextAlign(11);
               tl->SetTextSize(0.03);
-              tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
+              tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < %s < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],var_latex,var_lo[ivar],var_hi[ivar]));
               tl->DrawLatexNDC(0.21,0.80,Form("%.1f < #eta < %.1f",eta_lo[ieta],eta_hi[ieta]));
 
-              gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_z_in_eta_%d_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ix, ieta) );
+              gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_z_in_eta_%d_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ivar, ieta) );
 
               delete htemp;
               delete leg;
@@ -479,11 +491,11 @@ class PlotHadron
               htemp->GetYaxis()->SetTitle(Form("R^{%s}_{eA}",hadron_latex));
               myhset(htemp,1.2,1.6,0.05,0.05);
 
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerSize(0.7);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerStyle(21);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetLineColor(kRed);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerColor(kRed);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->Draw("same");
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerSize(0.7);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerStyle(21);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetLineColor(kRed);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerColor(kRed);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->Draw("same");
               
               TLine l1(plot_xrange_lo,1,plot_xrange_hi,1);
               l1.SetLineStyle(7);
@@ -493,11 +505,11 @@ class PlotHadron
               TLatex* tl = new TLatex();
               tl->SetTextAlign(11);
               tl->SetTextSize(0.03);
-              tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
+              tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < %s < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],var_latex,var_lo[ivar],var_hi[ivar]));
               tl->DrawLatexNDC(0.21,0.80,Form("%.1f < #eta < %.1f",eta_lo[ieta],eta_hi[ieta]));
               tl->DrawLatexNDC(0.21,0.75,Form("%s @ %s / %s @ %s",sys_name[sys_eA_option],energy_name[energy_eA_option],sys_name[sys_ep_option],energy_name[energy_ep_option]));
 
-              gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_%d_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ix, ieta) );
+              gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_%d_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ivar, ieta) );
 
               delete htemp;
               delete leg;
@@ -538,14 +550,14 @@ class PlotHadron
             leg->SetFillStyle(0);
             leg->SetMargin(0.1);
 
-            for (int ix = 0; ix < xbin-1; ++ix)
+            for (int ivar = 0; ivar < varbin-1; ++ivar)
             { // excluding inclusive bin
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerColor(x_color[ix]);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetLineColor(x_color[ix]);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerSize(0.5);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerStyle(21);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->Draw("same");
-              leg->AddEntry(h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta],Form("%.1e < x < %.1e",x_lo[ix],x_hi[ix]),"p");
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerColor(x_color[ivar]);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetLineColor(x_color[ivar]);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerSize(0.5);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerStyle(21);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->Draw("same");
+              leg->AddEntry(h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta],Form("%.1e < %s < %.1e",var_latex,var_lo[ivar],var_hi[ivar]),"p");
             }
             leg->Draw("same");
 
@@ -561,7 +573,7 @@ class PlotHadron
             tl->DrawLatexNDC(0.21,0.80,Form("%.1f < #eta < %.1f",eta_lo[ieta],eta_hi[ieta]));
             tl->DrawLatexNDC(0.21,0.75,Form("%s @ %s / %s @ %s",sys_name[sys_eA_option],energy_name[energy_eA_option],sys_name[sys_ep_option],energy_name[energy_ep_option]));
 
-            gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_diff_x_%d_%d.pdf\")", cno-1, hadron_abbr, iQ2, ieta) );
+            gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_diff_%s_%d_%d.pdf\")", cno-1, hadron_abbr, var_abbr, iQ2, ieta) );
 
             delete htemp;
             delete leg;
@@ -570,9 +582,9 @@ class PlotHadron
         }
       }
 
-      for (int ix = 0; ix < xbin; ++ix)
+      for (int ivar = 0; ivar < varbin; ++ivar)
       {
-        if (ix<xbin-1) continue;
+        if (ivar<varbin-1) continue;
 
         for (int ieta = 0; ieta < etabin; ++ieta)
         {
@@ -600,12 +612,12 @@ class PlotHadron
 
             for (int iQ2 = 0; iQ2 < Q2bin-1; ++iQ2)
             { // excluding inclusive bin
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerColor(Q2_color[iQ2]);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetLineColor(Q2_color[iQ2]);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerSize(0.5);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerStyle(21);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->Draw("same");
-              leg->AddEntry(h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta],Form("%.1e < Q^{2} < %.1e",Q2_lo[iQ2],Q2_hi[iQ2]),"p");
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerColor(Q2_color[iQ2]);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetLineColor(Q2_color[iQ2]);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerSize(0.5);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerStyle(21);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->Draw("same");
+              leg->AddEntry(h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta],Form("%.1e < Q^{2} < %.1e",Q2_lo[iQ2],Q2_hi[iQ2]),"p");
             }
             leg->Draw("same");
 
@@ -617,11 +629,11 @@ class PlotHadron
             TLatex* tl = new TLatex();
             tl->SetTextAlign(11);
             tl->SetTextSize(0.03);
-            tl->DrawLatexNDC(0.21,0.85,Form("%.0e < x < %.0e, 0.05 < y < 0.8",x_lo[ix],x_hi[ix]));
+            tl->DrawLatexNDC(0.21,0.85,Form("%.0e < %s < %.0e, 0.05 < y < 0.8",var_latex,var_lo[ivar],var_hi[ivar]));
             tl->DrawLatexNDC(0.21,0.80,Form("%.1f < #eta < %.1f",eta_lo[ieta],eta_hi[ieta]));
             tl->DrawLatexNDC(0.21,0.75,Form("%s @ %s / %s @ %s",sys_name[sys_eA_option],energy_name[energy_eA_option],sys_name[sys_ep_option],energy_name[energy_ep_option]));
 
-            gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_diff_Q2_%d_%d.pdf\")", cno-1, hadron_abbr, ix, ieta) );
+            gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_diff_Q2_%d_%d.pdf\")", cno-1, hadron_abbr, ivar, ieta) );
 
             delete htemp;
             delete leg;
@@ -634,9 +646,9 @@ class PlotHadron
       {
         if (iQ2<Q2bin-1) continue;
 
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
-          if (ix<xbin-1) continue;
+          if (ivar<varbin-1) continue;
 
           mcs(cno++);
           {
@@ -660,12 +672,12 @@ class PlotHadron
 
             for (int ieta = 0; ieta < etabin-1; ++ieta)
             { // excluding inclusive bin
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerColor(eta_color[ieta]);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetLineColor(eta_color[ieta]);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerSize(0.5);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->SetMarkerStyle(21);
-              h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->Draw("same");
-              leg->AddEntry(h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta],Form("%.1f < #eta < %.1f",eta_lo[ieta],eta_hi[ieta]),"p");
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerColor(eta_color[ieta]);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetLineColor(eta_color[ieta]);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerSize(0.5);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->SetMarkerStyle(21);
+              h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->Draw("same");
+              leg->AddEntry(h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta],Form("%.1f < #eta < %.1f",eta_lo[ieta],eta_hi[ieta]),"p");
             }
             leg->Draw("same");
 
@@ -677,10 +689,10 @@ class PlotHadron
             TLatex* tl = new TLatex();
             tl->SetTextAlign(11);
             tl->SetTextSize(0.03);
-            tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < x < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],x_lo[ix],x_hi[ix]));
+            tl->DrawLatexNDC(0.21,0.85,Form("%.0f < Q^{2} < %.0f GeV^{2}, %.0e < %s < %.0e, 0.05 < y < 0.8",Q2_lo[iQ2],Q2_hi[iQ2],var_latex,var_lo[ivar],var_hi[ivar]));
             tl->DrawLatexNDC(0.21,0.80,Form("%s @ %s / %s @ %s",sys_name[sys_eA_option],energy_name[energy_eA_option],sys_name[sys_ep_option],energy_name[energy_ep_option]));
 
-            gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_diff_eta_%d_%d.pdf\")", cno-1, hadron_abbr, ix, ieta) );
+            gROOT->ProcessLine( Form("cc%d->Print(\"figs/%s_ratio_z_in_eta_diff_eta_%d_%d.pdf\")", cno-1, hadron_abbr, ivar, ieta) );
 
             delete htemp;
             delete leg;
@@ -694,13 +706,13 @@ class PlotHadron
     {
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        for (int ix = 0; ix < xbin; ++ix)
+        for (int ivar = 0; ivar < varbin; ++ivar)
         {
           for (int ieta = 0; ieta < etabin; ++ieta)
           {
-            h1d_hadron_z_in_eta_gen_ep[iQ2][ix][ieta]->Write();
-            h1d_hadron_z_in_eta_gen_eA[iQ2][ix][ieta]->Write();
-            h1d_hadron_z_in_eta_gen_ratio[iQ2][ix][ieta]->Write();
+            h1d_hadron_z_in_eta_gen_ep[iQ2][ivar][ieta]->Write();
+            h1d_hadron_z_in_eta_gen_eA[iQ2][ivar][ieta]->Write();
+            h1d_hadron_z_in_eta_gen_ratio[iQ2][ivar][ieta]->Write();
           }
         }
       }
@@ -714,16 +726,17 @@ void plot_chadron_gen(const char* inFile_ep = "hists_gen_ep.root", const int sys
   TFile* fin_ep = new TFile(inFile_ep,"READ"); 
   TFile* fin_eA = new TFile(inFile_eA,"READ"); 
   
-  PlotHadron plot_pion(211,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option);
+  int var_option = 1; // 0: x, 1: nu
+  PlotHadron plot_pion(211,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
   plot_pion.ReadEvtHists(fin_ep,fin_eA);
   plot_pion.ReadHadronHists(fin_ep,fin_eA);
   plot_pion.SetNorm(0);
-  // plot_pion.Plot2D();
+  plot_pion.Plot2D();
   plot_pion.SliceInEta();
   plot_pion.Plot1D();
   plot_pion.PlotComparison();
 
-  PlotHadron plot_kaon(321,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option);
+  PlotHadron plot_kaon(321,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
   plot_kaon.ReadEvtHists(fin_ep,fin_eA);
   plot_kaon.ReadHadronHists(fin_ep,fin_eA);
   plot_kaon.SetNorm(0);
@@ -732,16 +745,16 @@ void plot_chadron_gen(const char* inFile_ep = "hists_gen_ep.root", const int sys
   plot_kaon.Plot1D();
   plot_kaon.PlotComparison();
 
-  PlotHadron plot_proton(2212,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option);
-  plot_proton.ReadEvtHists(fin_ep,fin_eA);
-  plot_proton.ReadHadronHists(fin_ep,fin_eA);
-  plot_proton.SetNorm(0);
-  // plot_proton.Plot2D();
-  plot_proton.SliceInEta();
-  plot_proton.Plot1D();
-  plot_proton.PlotComparison();
+  // PlotHadron plot_proton(2212,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
+  // plot_proton.ReadEvtHists(fin_ep,fin_eA);
+  // plot_proton.ReadHadronHists(fin_ep,fin_eA);
+  // plot_proton.SetNorm(0);
+  // // plot_proton.Plot2D();
+  // plot_proton.SliceInEta();
+  // plot_proton.Plot1D();
+  // plot_proton.PlotComparison();
 
-  // PlotHadron plot_D0(421,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option);
+  // PlotHadron plot_D0(421,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
   // plot_D0.ReadEvtHists(fin_ep,fin_eA);
   // plot_D0.ReadHadronHists(fin_ep,fin_eA);
   // plot_D0.PlotEvents();
