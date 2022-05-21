@@ -164,7 +164,7 @@ class hadron_gen
         erhic::ParticleMC* part = py_evt->GetTrack(ipart);
 
         if (abs(part->Id())!=hadron_id) continue;
-        if (part->GetStatus()!=1 && part->GetStatus()!=11) continue; // reject un-stable particles
+        if (part->GetStatus()!=1 && part->GetStatus()!=11 && part->GetStatus()!=2) continue; // 1 -- stable particles, 11 -- decay particles in Pythia, 2 -- decay particles in BeAGLE
 
         h1d_parent_id->Fill(abs(part->GetParentId()));
 
@@ -227,12 +227,54 @@ class hadron_gen
     }
 };
 
-void ana_hadron_gen(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, int data_type = 0)
-{ // data type: 0 -- EIC, 1 -- HERMES, 2 -- CLAS
+bool event_w_charm(erhic::EventPythia* event, int gen_type)
+{
+  if (gen_type==0)
+  { // Pythia 6
+    bool flag_search_group = false; // flag if the group of particles has been searched
+    for (int ipart = 0; ipart < event->GetNTracks(); ++ipart)
+    {
+      erhic::ParticleMC* part = event->GetTrack(ipart);
+
+      if ( part->GetStatus()!=21 && !flag_search_group ) continue;
+      if ( part->GetStatus()==21 )
+      { // entering into the group of particles with KS=21
+        flag_search_group = true;
+        if ( part->Id()==4 || part->Id()==-4 ) return true;
+      }
+      if ( part->GetStatus()!=21 && flag_search_group ) break;
+    }
+  }
+  else
+  { // BeAGLE
+    bool flag_search_group = false; // flag if the group of particles has been searched
+    for (int ipart = event->GetNTracks()-1; ipart >=0; ipart--)
+    { // faster looping backwards
+      erhic::ParticleMC* part = event->GetTrack(ipart);
+
+      if ( part->GetStatus()!=3 && !flag_search_group ) continue;
+      if ( part->GetStatus()==3 )
+      { // entering into the group of particles with KS=3
+        flag_search_group = true;
+        if ( part->Id()==4 || part->Id()==-4 ) return true;
+      }
+      if ( part->GetStatus()!=3 && flag_search_group ) break;
+    }
+  }
+
+  return false;
+}
+
+void ana_hadron_gen(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, int data_type = 0, int gen_type = 0)
+{
   cout << "Data Type: "; 
   if (data_type==0) cout << "EIC" << endl;
   else if (data_type==1) cout << "HERMES" << endl;
   else cout << "CLAS" << endl;
+
+  cout << "Generator Type: "; 
+  if (gen_type==0) cout << "Pythia6" << endl;
+  else cout << "BeAGLE" << endl;
 
   TFile *f = new TFile(inFile);
 
@@ -345,7 +387,7 @@ void ana_hadron_gen(const char* inFile = "ep_allQ2.20x100.small.root", const cha
       h1d_nevt_in_x[Q2bin-1][ixbin]->Fill(1);
       h1d_nevt_in_x[Q2bin-1][xbin-1]->Fill(1);
 
-      if (event->GetTrack(9)->Id()==4 || event->GetTrack(9)->Id()==-4)
+      if ( event_w_charm(event,gen_type) )
       {
         h1d_nevt_w_charm_in_x[iQ2bin][ixbin]->Fill(1);
         h1d_nevt_w_charm_in_x[iQ2bin][xbin-1]->Fill(1);
@@ -361,7 +403,7 @@ void ana_hadron_gen(const char* inFile = "ep_allQ2.20x100.small.root", const cha
       h1d_nevt_in_nu[Q2bin-1][inubin]->Fill(1);
       h1d_nevt_in_nu[Q2bin-1][nubin-1]->Fill(1);
 
-      if (event->GetTrack(9)->Id()==4 || event->GetTrack(9)->Id()==-4)
+      if ( event_w_charm(event,gen_type) )
       {
         h1d_nevt_w_charm_in_nu[iQ2bin][inubin]->Fill(1);
         h1d_nevt_w_charm_in_nu[iQ2bin][nubin-1]->Fill(1);
