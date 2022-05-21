@@ -195,14 +195,28 @@ class PlotHadron
           if (option==0)
           {
             if (iQ2==0 && ivar==0) cout << "Normlaize using inclusive DIS events" << endl;
-            norm_ep = 1.0/h1d_nevt_ep[iQ2][ivar]->Integral();
-            norm_eA = 1.0/h1d_nevt_eA[iQ2][ivar]->Integral();
+            if (h1d_nevt_ep[iQ2][ivar]->Integral()>0 && h1d_nevt_eA[iQ2][ivar]->Integral()>0)
+            {
+              norm_ep = 1.0/h1d_nevt_ep[iQ2][ivar]->Integral();
+              norm_eA = 1.0/h1d_nevt_eA[iQ2][ivar]->Integral();
+            }
+            else
+            {
+              cout << "Cannot obtain normalization factor because no event found in this (Q2, "<<var_abbr<<") bin (" << iQ2 << ", " << ivar << ")" << endl;
+            }
           }
           else
           {
             if (iQ2==0 && ivar==0) cout << "Normlaize using events containing charm" << endl;
-            norm_ep = 1.0/h1d_nevt_w_charm_ep[iQ2][ivar]->Integral();
-            norm_eA = 1.0/h1d_nevt_w_charm_eA[iQ2][ivar]->Integral();
+            if (h1d_nevt_w_charm_ep[iQ2][ivar]->Integral()>0 && h1d_nevt_w_charm_eA[iQ2][ivar]->Integral()>0)
+            {
+              norm_ep = 1.0/h1d_nevt_w_charm_ep[iQ2][ivar]->Integral();
+              norm_eA = 1.0/h1d_nevt_w_charm_eA[iQ2][ivar]->Integral();
+            }
+            else
+            {
+              cout << "Cannot obtain normalization factor because no event found in this (Q2, "<<var_abbr<<") bin (" << iQ2 << ", " << ivar << ")" << endl;
+            }
           }
 
           // e+p
@@ -218,8 +232,8 @@ class PlotHadron
 
     void PlotEvents()
     {
-      double var_mid[varbin-1] = {0}; // last varbin is inclusive bin, skip it here
-      double var_mid_err[varbin-1] = {0};
+      double var_mid[MaxVarbin] = {0}; // last varbin is inclusive bin, skip it here
+      double var_mid_err[MaxVarbin] = {0};
       for (int ivar = 0; ivar < varbin-1; ++ivar)
       {
         if (var_option==0)
@@ -241,38 +255,47 @@ class PlotHadron
       
       for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
       {
-        double incl_ratio[varbin-1] = {0};
-        double incl_ratio_err[varbin-1] = {0};
-        double charm_ratio[varbin-1] = {0};
-        double charm_ratio_err[varbin-1] = {0};
+        double incl_ratio[MaxVarbin] = {0};
+        double incl_ratio_err[MaxVarbin] = {0};
+        double charm_ratio[MaxVarbin] = {0};
+        double charm_ratio_err[MaxVarbin] = {0};
         for (int ivar = 0; ivar < varbin-1; ++ivar)
         {
           incl_ratio[ivar] = (double)h1d_nevt_eA[iQ2][ivar]->GetEntries()/h1d_nevt_ep[iQ2][ivar]->GetEntries();
           incl_ratio_err[ivar] = incl_ratio[ivar]*sqrt(1.0/h1d_nevt_eA[iQ2][ivar]->GetEntries()+1.0/h1d_nevt_ep[iQ2][ivar]->GetEntries());
+          if (h1d_nevt_ep[iQ2][ivar]->GetEntries()<=0)
+          {
+            incl_ratio[ivar] = -9999;
+            incl_ratio_err[ivar] = 0;
+          }
 
           charm_ratio[ivar] = (double)h1d_nevt_w_charm_eA[iQ2][ivar]->GetEntries()/h1d_nevt_w_charm_ep[iQ2][ivar]->GetEntries();
           charm_ratio_err[ivar] = charm_ratio[ivar]*sqrt(1.0/h1d_nevt_w_charm_eA[iQ2][ivar]->GetEntries()+1.0/h1d_nevt_w_charm_ep[iQ2][ivar]->GetEntries());
+          if (h1d_nevt_w_charm_ep[iQ2][ivar]->GetEntries()<=0)
+          {
+            charm_ratio[ivar] = -9999;
+            charm_ratio_err[ivar] = 0;
+          }
 
           cout << var_mid[ivar] << " inclusive ratio " << incl_ratio[ivar] << " charm ratio " << charm_ratio[ivar] << endl;
         }
 
         g_incl_eA_over_ep[iQ2] = new TGraphErrors(varbin-1,var_mid,incl_ratio,var_mid_err,incl_ratio_err);
         g_charm_eA_over_ep[iQ2] = new TGraphErrors(varbin-1,var_mid,charm_ratio,var_mid_err,charm_ratio_err);
-      }
-      
-      for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
-      {
+
         mcs(cno++);
         {
-          float plot_xrange_lo = -4;
-          float plot_xrange_hi = 0;
+          float plot_xrange_lo = var_mid[0]-var_mid_err[0];
+          float plot_xrange_hi = var_mid[varbin-2]+var_mid_err[varbin-2];
 
-          float plot_yrange_lo = 1;
-          float plot_yrange_hi = 6;
+          float plot_yrange_diff = fabs(TMath::MaxElement(varbin-1,incl_ratio)-TMath::MaxElement(varbin-1,charm_ratio));
+          float plot_yrange_lo = TMath::MaxElement(varbin-1,incl_ratio)-3*plot_yrange_diff;
+          float plot_yrange_hi = TMath::MaxElement(varbin-1,incl_ratio)+3*plot_yrange_diff;
 
           TH2F* htemp = new TH2F("htemp","",10,plot_xrange_lo,plot_xrange_hi,10,plot_yrange_lo,plot_yrange_hi);
           htemp->Draw();
-          htemp->GetXaxis()->SetTitle("log(x)");
+          if (var_option==0) htemp->GetXaxis()->SetTitle("log(x)");
+          else htemp->GetXaxis()->SetTitle("#nu");
           htemp->GetYaxis()->SetTitle(Form("N_{evt}^{%s @ %s}/N_{evt}^{%s @ %s}",sys_name[sys_eA_option],energy_name[energy_eA_option],sys_name[sys_ep_option],energy_name[energy_ep_option]));
           myhset(htemp,1.2,1.6,0.05,0.045);
 
@@ -308,6 +331,11 @@ class PlotHadron
           delete leg;
           delete tl;
         }
+      }
+      
+      for (int iQ2 = 0; iQ2 < Q2bin; ++iQ2)
+      {
+        
       }
     }
 
@@ -726,12 +754,12 @@ void plot_chadron_gen(const char* inFile_ep = "hists_gen_ep.root", const int sys
   TFile* fin_ep = new TFile(inFile_ep,"READ"); 
   TFile* fin_eA = new TFile(inFile_eA,"READ"); 
   
-  int var_option = 1; // 0: x, 1: nu
+  int var_option = 0; // 0: x, 1: nu
   PlotHadron plot_pion(211,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
   plot_pion.ReadEvtHists(fin_ep,fin_eA);
   plot_pion.ReadHadronHists(fin_ep,fin_eA);
   plot_pion.SetNorm(0);
-  plot_pion.Plot2D();
+  // plot_pion.Plot2D();
   plot_pion.SliceInEta();
   plot_pion.Plot1D();
   plot_pion.PlotComparison();
@@ -754,15 +782,15 @@ void plot_chadron_gen(const char* inFile_ep = "hists_gen_ep.root", const int sys
   // plot_proton.Plot1D();
   // plot_proton.PlotComparison();
 
-  // PlotHadron plot_D0(421,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
-  // plot_D0.ReadEvtHists(fin_ep,fin_eA);
-  // plot_D0.ReadHadronHists(fin_ep,fin_eA);
-  // plot_D0.PlotEvents();
-  // plot_D0.SetNorm(1);
-  // // plot_D0.Plot2D();
-  // plot_D0.SliceInEta();
-  // plot_D0.Plot1D();
-  // plot_D0.PlotComparison();
+  PlotHadron plot_D0(421,sys_ep_option,energy_ep_option,sys_eA_option,energy_eA_option,var_option);
+  plot_D0.ReadEvtHists(fin_ep,fin_eA);
+  plot_D0.ReadHadronHists(fin_ep,fin_eA);
+  plot_D0.PlotEvents();
+  plot_D0.SetNorm(1);
+  // plot_D0.Plot2D();
+  plot_D0.SliceInEta();
+  plot_D0.Plot1D();
+  plot_D0.PlotComparison();
 
   TFile* fout = new TFile(outFile,"recreate");
   plot_pion.WriteHadronHists(fout);
