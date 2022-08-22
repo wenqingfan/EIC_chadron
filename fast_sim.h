@@ -471,8 +471,8 @@ TVector3 smearPosHybrid(TVector3 const& mom, TVector3 const& pos)
   return sPos;
 }
 
-void passing_DIRC(TLorentzVector const& mom4, bitset<4>& binary_id, const float Bfield_type = 0, const float R_in = 0.9)
-{ // FIX ME: only consider firing or not, need to consider sigma separation later 
+void passing_DIRC(TLorentzVector const& mom4, bitset<4>& binary_id, const float Bfield_type = 0, const float R_in = 0.76, const int thrd_option = 1)
+{ // FIX ME: only consider firing/detectable or not, need to consider sigma separation later 
   if (Bfield_type>1) return;
 
   // const float R_in = 0.5; // (move closest possible)
@@ -482,40 +482,75 @@ void passing_DIRC(TLorentzVector const& mom4, bitset<4>& binary_id, const float 
 
   float pt = mom4.Pt();
   float eta = mom4.PseudoRapidity();
-  if (pt<=thr_kin || fabs(eta)>1) return; // no new info added from DIRC since particle does not hit it
+  if (fabs(eta)>1) return; // no new info added from DIRC since particle does not hit it
+
+  if (pt<=thr_kin) for (int i = 0; i < 4; ++i) binary_id[i] = 0;
 
   float p = mom4.P();
-  if (p>0.00048) binary_id[0] = 1; // e fired
-  if (p>0.13) binary_id[1] = 1; // pi fired
-  if (p>0.47) binary_id[2] = 1; // K fired
-  if (p>0.88) binary_id[3] = 1; // p fired
-  if (p>6) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  if (thrd_option==0)
+  { // threshold for certain radiator to emit Cherenkvo light 
+    if (p>0.00048) binary_id[0] = 1; // e fired
+    if (p>0.13) binary_id[1] = 1; // pi fired
+    if (p>0.47) binary_id[2] = 1; // K fired
+    if (p>0.88) binary_id[3] = 1; // p fired
+    if (p>6) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  }
+  else
+  { // threshold for the Cherenkov light to be detectable (https://indico.bnl.gov/event/16314/contributions/65336/attachments/42008/70364/20220707-hpDIRC-threshold-mode-schwiening.pdf)
+    if (p>0.00048) binary_id[0] = 1; // e fired
+    if (p>0.25) binary_id[1] = 1; // pi fired
+    if (p>1.1) binary_id[2] = 1; // K fired
+    if (p>2.15) binary_id[3] = 1; // p fired
+    if (p>6) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  }
 }
 
-void passing_hside_dRICH(TLorentzVector const& mom4, bitset<4>& binary_id)
+void passing_hside_dRICH(TLorentzVector const& mom4, bitset<4>& binary_id, const int thrd_option = 1)
 {
   float eta = mom4.PseudoRapidity();
   if (eta<=1 || eta>4) return; // no new info added from dRICH since particle does not hit it
 
   float p = mom4.P();
-  if (p>0.00245) binary_id[0] = 1; // e fired
-  if (p>0.69) binary_id[1] = 1; // pi fired
-  if (p>2.46) binary_id[2] = 1; // K fired
-  if (p>4.67) binary_id[3] = 1; // p fired
-  if (p>60) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  if (thrd_option==0)
+  {
+    if (p>0.00245) binary_id[0] = 1; // e fired
+    if (p>0.69) binary_id[1] = 1; // pi fired
+    if (p>2.46) binary_id[2] = 1; // K fired
+    if (p>4.67) binary_id[3] = 1; // p fired
+    if (p>60) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  }
+  else
+  {
+    if (p>0.00245) binary_id[0] = 1; // e fired
+    if (p>1.0) binary_id[1] = 1; // pi fired
+    if (p>3.0) binary_id[2] = 1; // K fired
+    if (p>5.0) binary_id[3] = 1; // p fired
+    if (p>60) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  }
 }
 
-void passing_eside_dRICH(TLorentzVector const& mom4, bitset<4>& binary_id)
+void passing_eside_dRICH(TLorentzVector const& mom4, bitset<4>& binary_id, const int thrd_option = 1)
 {
   float eta = mom4.PseudoRapidity();
   if (eta>=-1 || eta<-4) return; // no new info added from dRICH since particle does not hit it
 
   float p = mom4.P();
-  if (p>0.00245) binary_id[0] = 1; // e fired
-  if (p>0.69) binary_id[1] = 1; // pi fired
-  if (p>2.46) binary_id[2] = 1; // K fired
-  if (p>4.67) binary_id[3] = 1; // p fired
-  if (p>60) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  if (thrd_option)
+  {
+    if (p>0.00245) binary_id[0] = 1; // e fired
+    if (p>0.69) binary_id[1] = 1; // pi fired
+    if (p>2.46) binary_id[2] = 1; // K fired
+    if (p>4.67) binary_id[3] = 1; // p fired
+    if (p>60) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  }
+  else
+  {
+    if (p>0.00245) binary_id[0] = 1; // e fired
+    if (p>1.0) binary_id[1] = 1; // pi fired
+    if (p>3.0) binary_id[2] = 1; // K fired
+    if (p>5.0) binary_id[3] = 1; // p fired
+    if (p>60) for (int i = 0; i < 4; ++i) binary_id[i] = 0; // FIX ME: brute-force hard cut
+  }
 }
 
 void passing_DM_PID(TLorentzVector const& mom4, bitset<4>& binary_id)
@@ -587,8 +622,8 @@ void identify_charged_hadrons(const int truth_id, bitset<4> const& binary_id, fl
     {
       _prob_e = 0;
       _prob_pi = 0;
-      _prob_K = 0.6;
-      _prob_p = 0.4;
+      _prob_K = 0.62;
+      _prob_p = 0.38;
     } 
   }
   else if (binary_id.to_ulong()>=1)
@@ -603,10 +638,13 @@ void identify_charged_hadrons(const int truth_id, bitset<4> const& binary_id, fl
     else
     {
       _prob_e = 0;
-      _prob_pi = 0.7;
-      _prob_K = 0.2;
-      _prob_p = 0.1;
+      _prob_pi = 0.82;
+      _prob_K = 0.11;
+      _prob_p = 0.07;
     } 
+  }
+  else
+  { // if no information from the firing bit, the probabilties will stay as their initial value (prob_* = -999)
   }
 }
 
