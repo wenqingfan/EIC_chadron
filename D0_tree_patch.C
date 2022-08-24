@@ -135,9 +135,11 @@ class D0_reco
     TH2D* fg2d_Kpimass_vs_z[chargebin][etabin]; // 0: K-pi+
     TH2D* bg2d_Kpimass_vs_z[chargebin][etabin]; // 0: K-pi+
 
+    // kinematics of the decay products of D0->Kpi in eta and pt bins
     TH2D* h2d_K_D0_p_vs_eta[etabin][pptbin];
     TH2D* h2d_pi_D0_p_vs_eta[etabin][pptbin];
 
+    // kinematics of D0 in Q2 and x bins
     TH2D* h2d_D0_pt_vs_eta[Q2bin][xbin];
     TH2D* h2d_D0_z_vs_eta[Q2bin][xbin];
 
@@ -413,7 +415,7 @@ class D0_reco
         assert(abs(proton->Id())!=2212);
         hadron_beam = proton->Get4Vector();
       }
-      else return; // if incoming proton not found, skip the whole event=
+      else return; // if incoming proton not found, skip the whole event
 
       for(int ipart = 0; ipart < py_evt->GetNTracks(); ipart++)
       {
@@ -421,9 +423,9 @@ class D0_reco
 
         if (part->GetStatus()!=1) continue; // only loop through final stable particles
 
-        if (abs(part->Id())!=2212 && abs(part->Id())!=211 && abs(part->Id())!=321 && abs(part->Id())!=11 && abs(part->Id())!=13) continue; // proton, pion, kaon, electron, muon
+        if (abs(part->Id())!=2212 && abs(part->Id())!=211 && abs(part->Id())!=321 && abs(part->Id())!=11 && abs(part->Id())!=13) continue; // only consider charged particles: proton, pion, kaon, electron, muon
 
-        if (TRK_P_LO>-99 && part->GetPt()<TRK_P_LO) continue;
+        if (TRK_P_LO>-99 && part->GetPt()<TRK_P_LO) continue; // NB: pt threshold rather than p threshold!
 
         TLorentzVector track_mom4_true = part->Get4Vector();
         TLorentzVector track_mom4_reco = track_mom4_true;
