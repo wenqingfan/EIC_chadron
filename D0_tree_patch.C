@@ -308,7 +308,7 @@ class D0_reco
       h2d_ztheo_vs_zjet->Reset("ICESM");
     }
 
-    void SetLowP(const float mom_thr) { TRK_P_LO = mom_thr; }
+    void SetLowPt(const float mom_thr) { TRK_P_LO = mom_thr; }
 
     void SetDCACuts()
     {
@@ -593,8 +593,8 @@ class D0_reco
 
       TLorentzVector pair(kaon_p+pion_p);
       int ietabin = -9999;
-      for (int ieta = 0; ieta < etabin; ++ieta)
-      {
+      for (int ieta = 0; ieta < etabin-1; ++ieta)
+      { // last bin is inclusive
         if (pair.PseudoRapidity()>=eta_lo[ieta] && pair.PseudoRapidity()<eta_hi[ieta]) ietabin = ieta;
       }
       if (ietabin<0) return;
@@ -607,12 +607,22 @@ class D0_reco
       fg2d_Kpimass_vs_p[2][ietabin]->Fill(pair.M(),pair.Pt());
       fg2d_Kpimass_vs_z[charge_type][ietabin]->Fill(pair.M(),frag_z);
       fg2d_Kpimass_vs_z[2][ietabin]->Fill(pair.M(),frag_z);
+      // fill inclusive bin
+      fg2d_Kpimass_vs_p[charge_type][etabin-1]->Fill(pair.M(),pair.Pt());
+      fg2d_Kpimass_vs_p[2][etabin-1]->Fill(pair.M(),pair.Pt());
+      fg2d_Kpimass_vs_z[charge_type][etabin-1]->Fill(pair.M(),frag_z);
+      fg2d_Kpimass_vs_z[2][etabin-1]->Fill(pair.M(),frag_z);
       if (!is_SG)
       {
         bg2d_Kpimass_vs_p[charge_type][ietabin]->Fill(pair.M(),pair.Pt());
         bg2d_Kpimass_vs_p[2][ietabin]->Fill(pair.M(),pair.Pt());
         bg2d_Kpimass_vs_z[charge_type][ietabin]->Fill(pair.M(),frag_z);
         bg2d_Kpimass_vs_z[2][ietabin]->Fill(pair.M(),frag_z);
+        // fill inclusive bin
+        bg2d_Kpimass_vs_p[charge_type][etabin-1]->Fill(pair.M(),pair.Pt());
+        bg2d_Kpimass_vs_p[2][etabin-1]->Fill(pair.M(),pair.Pt());
+        bg2d_Kpimass_vs_z[charge_type][etabin-1]->Fill(pair.M(),frag_z);
+        bg2d_Kpimass_vs_z[2][etabin-1]->Fill(pair.M(),frag_z);
       }
       else
       {
@@ -631,6 +641,9 @@ class D0_reco
           {
             h2d_K_D0_p_vs_eta[ietabin][ipt]->Fill(kaon_p.P(),kaon_p.PseudoRapidity());
             h2d_pi_D0_p_vs_eta[ietabin][ipt]->Fill(pion_p.P(),pion_p.PseudoRapidity());
+            // fill inclusive bin
+            h2d_K_D0_p_vs_eta[etabin-1][ipt]->Fill(kaon_p.P(),kaon_p.PseudoRapidity());
+            h2d_pi_D0_p_vs_eta[etabin-1][ipt]->Fill(pion_p.P(),pion_p.PseudoRapidity());
           }
         }
 
@@ -1020,7 +1033,7 @@ class Lc_reco
       }
     }
 
-    void SetLowP(const float mom_thr) { TRK_P_LO = mom_thr; }
+    void SetLowPt(const float mom_thr) { TRK_P_LO = mom_thr; }
 
     void SetDCACuts()
     {
@@ -1371,8 +1384,8 @@ class Lc_reco
       TLorentzVector trip(kaon_p+pion_p+proton_p);
       // if (is_SG) cout<<"mass "<<trip.M()<<endl;
       int ietabin = -9999;
-      for (int ieta = 0; ieta < etabin; ++ieta)
-      {
+      for (int ieta = 0; ieta < etabin-1; ++ieta)
+      { // the last bin is inclusive
         if (trip.PseudoRapidity()>=eta_lo[ieta] && trip.PseudoRapidity()<eta_hi[ieta]) ietabin = ieta;
       }
       if (ietabin<0) return;
@@ -1383,12 +1396,22 @@ class Lc_reco
       fg2d_Kpipmass_vs_p[2][ietabin]->Fill(trip.M(),trip.Pt());
       fg2d_Kpipmass_vs_z[charge_type][ietabin]->Fill(trip.M(),frag_z);
       fg2d_Kpipmass_vs_z[2][ietabin]->Fill(trip.M(),frag_z);
+      // fill inclusive bin
+      fg2d_Kpipmass_vs_p[charge_type][etabin-1]->Fill(trip.M(),trip.Pt());
+      fg2d_Kpipmass_vs_p[2][etabin-1]->Fill(trip.M(),trip.Pt());
+      fg2d_Kpipmass_vs_z[charge_type][etabin-1]->Fill(trip.M(),frag_z);
+      fg2d_Kpipmass_vs_z[2][etabin-1]->Fill(trip.M(),frag_z);
       if (!is_SG)
       {
         bg2d_Kpipmass_vs_p[charge_type][ietabin]->Fill(trip.M(),trip.Pt());
         bg2d_Kpipmass_vs_p[2][ietabin]->Fill(trip.M(),trip.Pt());
         bg2d_Kpipmass_vs_z[charge_type][ietabin]->Fill(trip.M(),frag_z);
         bg2d_Kpipmass_vs_z[2][ietabin]->Fill(trip.M(),frag_z);
+        // fill inclusive bin
+        bg2d_Kpipmass_vs_p[charge_type][etabin-1]->Fill(trip.M(),trip.Pt());
+        bg2d_Kpipmass_vs_p[2][etabin-1]->Fill(trip.M(),trip.Pt());
+        bg2d_Kpipmass_vs_z[charge_type][etabin-1]->Fill(trip.M(),frag_z);
+        bg2d_Kpipmass_vs_z[2][etabin-1]->Fill(trip.M(),frag_z);
       }
       else
       {
@@ -1400,6 +1423,10 @@ class Lc_reco
             h2d_K_Lc_p_vs_eta[ietabin][ipt]->Fill(kaon_p.P(),kaon_p.PseudoRapidity());
             h2d_pi_Lc_p_vs_eta[ietabin][ipt]->Fill(pion_p.P(),pion_p.PseudoRapidity());
             h2d_p_Lc_p_vs_eta[ietabin][ipt]->Fill(proton_p.P(),proton_p.PseudoRapidity());
+            // fill inclusive bin
+            h2d_K_Lc_p_vs_eta[etabin-1][ipt]->Fill(kaon_p.P(),kaon_p.PseudoRapidity());
+            h2d_pi_Lc_p_vs_eta[etabin-1][ipt]->Fill(pion_p.P(),pion_p.PseudoRapidity());
+            h2d_p_Lc_p_vs_eta[etabin-1][ipt]->Fill(proton_p.P(),proton_p.PseudoRapidity());
           }
         }
 
@@ -1709,13 +1736,14 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
   Int_t nParticles(0);
 
   D0_reco ana_D0;
-  ana_D0.SetLowP(0.1);
+  ana_D0.SetLowPt(0.1);
   ana_D0.SetDCACuts();
   ana_D0.SetIDCuts(PID_option);
   ana_D0.SetSmearType(smear_option);
   ana_D0.SetBFieldType(Bfield_type);
 
   Lc_reco ana_Lc;
+  ana_Lc.SetLowPt(0.1);
   ana_Lc.SetDCACuts();
   ana_Lc.SetIDCuts(PID_option);
   ana_Lc.SetSmearType(smear_option);
