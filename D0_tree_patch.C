@@ -189,15 +189,15 @@ class D0_reco
       {
         for (int ipt = 0; ipt < pptbin; ++ipt)
         {
-          double temp_p[21] = {0};
+          double temp_p[41] = {0};
           double temp_p_min = 0.1, temp_p_max = 10;
           double temp_eta[161] = {0};
           double temp_eta_min = -4, temp_eta_max = 4;
-          logbins(temp_p_min, temp_p_max, 20, temp_p);
+          logbins(temp_p_min, temp_p_max, 40, temp_p);
           linbins(temp_eta_min, temp_eta_max, 160, temp_eta);
-          h2d_K_D0_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_K_D0_p_vs_eta_%d_%d",ieta,ipt),"K p vs eta",20,temp_p,160,temp_eta);
+          h2d_K_D0_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_K_D0_p_vs_eta_%d_%d",ieta,ipt),"K p vs eta",40,temp_p,160,temp_eta);
           h2d_K_D0_p_vs_eta[ieta][ipt]->Sumw2();
-          h2d_pi_D0_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_pi_D0_p_vs_eta_%d_%d",ieta,ipt),"pi p vs eta",20,temp_p,160,temp_eta);
+          h2d_pi_D0_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_pi_D0_p_vs_eta_%d_%d",ieta,ipt),"pi p vs eta",40,temp_p,160,temp_eta);
           h2d_pi_D0_p_vs_eta[ieta][ipt]->Sumw2();
         }
       }
@@ -1743,14 +1743,14 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
   Int_t nParticles(0);
 
   D0_reco ana_D0;
-  ana_D0.SetLowPt(0.1);
+  ana_D0.SetLowPt(0.2);
   ana_D0.SetDCACuts();
   ana_D0.SetIDCuts(PID_option);
   ana_D0.SetSmearType(smear_option);
   ana_D0.SetBFieldType(Bfield_type);
 
   Lc_reco ana_Lc;
-  ana_Lc.SetLowPt(0.1);
+  ana_Lc.SetLowPt(0.2);
   ana_Lc.SetDCACuts();
   ana_Lc.SetIDCuts(PID_option);
   ana_Lc.SetSmearType(smear_option);
