@@ -927,11 +927,17 @@ class Lc_reco
       {
         for (int ipt = 0; ipt < pptbin; ++ipt)
         {
-          h2d_K_Lc_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_K_Lc_p_vs_eta_%d_%d",ieta,ipt),"K p vs eta",100,0,10,160,-4,4);
+          double temp_p[41] = {0};
+          double temp_p_min = 0.1, temp_p_max = 10;
+          double temp_eta[161] = {0};
+          double temp_eta_min = -4, temp_eta_max = 4;
+          logbins(temp_p_min, temp_p_max, 40, temp_p);
+          linbins(temp_eta_min, temp_eta_max, 160, temp_eta);
+          h2d_K_Lc_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_K_Lc_p_vs_eta_%d_%d",ieta,ipt),"K p vs eta",40,temp_p,160,temp_eta);
           h2d_K_Lc_p_vs_eta[ieta][ipt]->Sumw2();
-          h2d_pi_Lc_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_pi_Lc_p_vs_eta_%d_%d",ieta,ipt),"pi p vs eta",100,0,10,160,-4,4);
+          h2d_pi_Lc_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_pi_Lc_p_vs_eta_%d_%d",ieta,ipt),"pi p vs eta",40,temp_p,160,temp_eta);
           h2d_pi_Lc_p_vs_eta[ieta][ipt]->Sumw2();
-          h2d_p_Lc_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_p_Lc_p_vs_eta_%d_%d",ieta,ipt),"p p vs eta",100,0,10,160,-4,4);
+          h2d_p_Lc_p_vs_eta[ieta][ipt] = new TH2D(Form("h2d_p_Lc_p_vs_eta_%d_%d",ieta,ipt),"proton p vs eta",40,temp_p,160,temp_eta);
           h2d_p_Lc_p_vs_eta[ieta][ipt]->Sumw2();
         }
       }
