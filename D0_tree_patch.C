@@ -1748,10 +1748,17 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
   TFile* f_athena_tracks = new TFile("ATHENA_Resolutions_r.root","READ");
   TFile* f_athena_vertex = new TFile("VertexRes_ATHENA.root","READ");
   if (smear_option==4)
-  { // NB: only available for ATHENA setting for now (not available for EPIC yet)
+  {
     cout << "Setup ATHENA smearing parameters" << endl;
     setup_ATHENA_single_track_smearing(f_athena_tracks);
     setup_ATHENA_PV_smearing(f_athena_vertex);
+  }
+  // EPIC smeaing
+  TFile* f_epic_tracks = new TFile("ePIC_Resolutions.root","READ");
+  if (smear_option==5)
+  { // NB: no PV smearing available for ePIC smearing yet
+    cout << "Setup epic smearing parameters" << endl;
+    setup_EPIC_single_track_smearing(f_epic_tracks);
   }
 
   //Define Some Variables
