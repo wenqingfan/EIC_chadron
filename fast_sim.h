@@ -571,11 +571,12 @@ TVector3 smearPosHybrid(TVector3 const& mom, TVector3 const& pos)
 
 void passing_DIRC(TLorentzVector const& mom4, bitset<4>& binary_id, const float Bfield_type = 0, const float R_in = 0.76, const int thrd_option = 1)
 { // FIX ME: only consider firing/detectable or not, need to consider sigma separation later 
-  if (Bfield_type>1) return;
+  if (Bfield_type>2) return; // added 1.7T field option
 
   // const float R_in = 0.5; // (move closest possible)
   float Bfield = 1.4;
   if (Bfield_type==1) Bfield = 3.0;
+  if (Bfield_type==2) Bfield = 1.7;
   float thr_kin = 0.3*Bfield*R_in/2; 
 
   float pt = mom4.Pt();

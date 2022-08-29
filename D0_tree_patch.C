@@ -160,7 +160,7 @@ class D0_reco
       TRK_DCA = -9999;
       ID_OPTION = -1; // -1--no PID, 0--DM PID, 1--PID w/o assumption, 2--PID w/ assumption
       SMEAR_OPTION = 0; // 0--no smearing, 1--DM smearing, 1--LBL smearing, 2--Hybrid smearing, 3--ATHENA smearing, 4--EPIC smearing
-      BFIELD_TYPE = 0; // 0--Barbar, 1--Beast
+      BFIELD_TYPE = 0; // 0--Barbar, 1--Beast, 2--ePIC
 
       PAIR_DCA = -9999; // 120um in unit of mm
       DECAY_L = -9999;
@@ -903,7 +903,7 @@ class Lc_reco
       TRK_DCA = -9999;
       ID_OPTION = -1; // -1--no PID, 0--DM PID, 1--PID w/o assumption, 2--PID w/ assumption
       SMEAR_OPTION = 0;  // 0--no smearing, 1--DM smearing, 1--LBL smearing, 2--Hybrid smearing, 3--ATHENA smearing, 4--EPIC smearing
-      BFIELD_TYPE = 0; // 0--Barbar, 1--Beast
+      BFIELD_TYPE = 0; // 0--Barbar, 1--Beast, 2--ePIC
 
       PAIR_DCA = -9999; // 120um in unit of mm
       DECAY_L = -9999;
@@ -1715,10 +1715,10 @@ class Lc_reco
 };
 
 void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, const int smear_option = 0, const int Bfield_type = 0, const int PID_option = 0)
-{ // smear_2nd_vtx & momentum: 0--no smearing, 1--DM smearing, 2--LBL smearing, 3--Hybrid smearing, 4--ATHENA smearing
-  // Bfield_type: 0--Barbar, 1--Beast
+{ // smear_2nd_vtx & momentum: 0--no smearing, 1--DM smearing, 2--LBL smearing, 3--Hybrid smearing, 4--ATHENA smearing, 5-- ePIC smearing
+  // Bfield_type: 0--Barbar, 1--Beast, 2--ePIC (ePIC is 1.7T, which is not a valid option for some of the smearing settings)
   // 0--no hID (but with eID), 1--PID with no low momentum cutoff, 2--PID with low momentum cutoff & some mis-identified pi, K, 3--PID with low momentum cutoff & all identified pi, K
-  // DCA_cut: 0--no cut, 1--cut on DCA
+  // DCA_cut: SetDCACuts()--cut on DCA
 
   // PDG data table
   pdg = new TDatabasePDG();
