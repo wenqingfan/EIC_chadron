@@ -159,7 +159,7 @@ class D0_reco
       TRK_P_LO = -9999;
       TRK_DCA = -9999;
       ID_OPTION = -1; // -1--no PID, 0--DM PID, 1--PID w/o assumption, 2--PID w/ assumption
-      SMEAR_OPTION = 0; // 0--no smearing, 1--DM smearing, 1--LBL smearing, 2--Hybrid smearing
+      SMEAR_OPTION = 0; // 0--no smearing, 1--DM smearing, 1--LBL smearing, 2--Hybrid smearing, 3--ATHENA smearing, 4--EPIC smearing
       BFIELD_TYPE = 0; // 0--Barbar, 1--Beast
 
       PAIR_DCA = -9999; // 120um in unit of mm
@@ -459,6 +459,11 @@ class D0_reco
         {
           track_mom4_reco = smearMomATHENA(track_mom4_true);
           track_vtx_reco = smearPosATHENA(track_mom4_true.Vect(), track_vtx_true);
+        }
+        if (SMEAR_OPTION==5)
+        {
+          track_mom4_reco = smearMomEPIC(track_mom4_true);
+          track_vtx_reco = smearPosEPIC(track_mom4_true.Vect(), track_vtx_true);
         }
         if (track_mom4_reco.E()>1000 || track_vtx_reco.Mag()>1000) continue; // outside eta or momentum range
 
@@ -897,7 +902,7 @@ class Lc_reco
       TRK_P_LO = -9999;
       TRK_DCA = -9999;
       ID_OPTION = -1; // -1--no PID, 0--DM PID, 1--PID w/o assumption, 2--PID w/ assumption
-      SMEAR_OPTION = 0;  // 0--no smearing, 1--DM smearing, 1--LBL smearing, 2--Hybrid smearing
+      SMEAR_OPTION = 0;  // 0--no smearing, 1--DM smearing, 1--LBL smearing, 2--Hybrid smearing, 3--ATHENA smearing, 4--EPIC smearing
       BFIELD_TYPE = 0; // 0--Barbar, 1--Beast
 
       PAIR_DCA = -9999; // 120um in unit of mm
@@ -1189,6 +1194,11 @@ class Lc_reco
         {
           track_mom4_reco = smearMomATHENA(track_mom4_true);
           track_vtx_reco = smearPosATHENA(track_mom4_true.Vect(), track_vtx_true);
+        }
+        if (SMEAR_OPTION==5)
+        {
+          track_mom4_reco = smearMomEPIC(track_mom4_true);
+          track_vtx_reco = smearPosEPIC(track_mom4_true.Vect(), track_vtx_true);
         }
         if (track_mom4_reco.E()>1000 || track_vtx_reco.Mag()>1000) continue; // outside eta or momentum range
 
@@ -1738,7 +1748,7 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
   TFile* f_athena_tracks = new TFile("ATHENA_Resolutions_r.root","READ");
   TFile* f_athena_vertex = new TFile("VertexRes_ATHENA.root","READ");
   if (smear_option==4)
-  {
+  { // NB: only available for ATHENA setting for now (not available for EPIC yet)
     cout << "Setup ATHENA smearing parameters" << endl;
     setup_ATHENA_single_track_smearing(f_athena_tracks);
     setup_ATHENA_PV_smearing(f_athena_vertex);
