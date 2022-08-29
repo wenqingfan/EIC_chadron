@@ -1754,7 +1754,7 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
     setup_ATHENA_PV_smearing(f_athena_vertex);
   }
   // EPIC smeaing
-  TFile* f_epic_tracks = new TFile("ePIC_Resolutions.root","READ");
+  TFile* f_epic_tracks = new TFile("ePIC_resolutions.root","READ");
   if (smear_option==5)
   { // NB: no PV smearing available for ePIC smearing yet
     cout << "Setup epic smearing parameters" << endl;
