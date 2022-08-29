@@ -56,37 +56,37 @@ void set_tracking_limits()
   double kin_p_ePIC_14[52] = {0};
   double kin_p_ePIC_17[52] = {0};
 
-  kin_eta[0] = 3.0; kin_pt_ePIC_14[0] = 0.15; kin_pt_ePIC_17[0] = 0.3;
-  kin_eta[1] = 2.5; kin_pt_ePIC_14[1] = 0.15; kin_pt_ePIC_17[1] = 0.3;
-  kin_eta[2] = 2.5; kin_pt_ePIC_14[2] = 0.13; kin_pt_ePIC_17[2] = 0.22;
-  kin_eta[3] = 2.0; kin_pt_ePIC_14[3] = 0.13; kin_pt_ePIC_17[3] = 0.22;
-  kin_eta[3] = 2.0; kin_pt_ePIC_14[3] = 0.07; kin_pt_ePIC_17[3] = 0.16;
-  kin_eta[3] = 1.5; kin_pt_ePIC_14[3] = 0.07; kin_pt_ePIC_17[3] = 0.16;
-  kin_eta[4] = 1.5; kin_pt_ePIC_14[4] = 0.15; kin_pt_ePIC_17[4] = 0.3;
-  kin_eta[5] = 1.0; kin_pt_ePIC_14[5] = 0.15; kin_pt_ePIC_17[5] = 0.3;
+  kin_eta[0] = 3.0; kin_pt_ePIC_14[0] = 0.20; kin_pt_ePIC_17[0] = 0.20;
+  kin_eta[1] = 2.5; kin_pt_ePIC_14[1] = 0.20; kin_pt_ePIC_17[1] = 0.20;
+  kin_eta[2] = 2.5; kin_pt_ePIC_14[2] = 0.20; kin_pt_ePIC_17[2] = 0.20;
+  kin_eta[3] = 2.0; kin_pt_ePIC_14[3] = 0.20; kin_pt_ePIC_17[3] = 0.20;
+  kin_eta[3] = 2.0; kin_pt_ePIC_14[3] = 0.20; kin_pt_ePIC_17[3] = 0.20;
+  kin_eta[3] = 1.5; kin_pt_ePIC_14[3] = 0.20; kin_pt_ePIC_17[3] = 0.20;
+  kin_eta[4] = 1.5; kin_pt_ePIC_14[4] = 0.20; kin_pt_ePIC_17[4] = 0.20;
+  kin_eta[5] = 1.0; kin_pt_ePIC_14[5] = 0.20; kin_pt_ePIC_17[5] = 0.20;
   for (int ibin = 6; ibin < 46; ++ibin)
   {
     if (ibin<26)
     {
       kin_eta[ibin] = 1-1./20*(ibin-6);
-      kin_pt_ePIC_14[ibin] = 0.2; // All-Si 0.09
-      kin_pt_ePIC_17[ibin] = 0.4; // All-Si 0.195
+      kin_pt_ePIC_14[ibin] = 0.20;
+      kin_pt_ePIC_17[ibin] = 0.20;
     }
     else
     {
       kin_eta[ibin] = 0+(-1.)/20*(ibin-6-20);
-      kin_pt_ePIC_14[ibin] = 0.2; // All-Si 0.09
-      kin_pt_ePIC_17[ibin] = 0.4; // All-Si 0.195
+      kin_pt_ePIC_14[ibin] = 0.20;
+      kin_pt_ePIC_17[ibin] = 0.20;
     }
   }
-  kin_eta[51-0] = -3.0; kin_pt_ePIC_14[51-0] = 0.15; kin_pt_ePIC_17[51-0] = 0.3;
-  kin_eta[51-1] = -2.5; kin_pt_ePIC_14[51-1] = 0.15; kin_pt_ePIC_17[51-1] = 0.3;
-  kin_eta[51-2] = -2.5; kin_pt_ePIC_14[51-2] = 0.13; kin_pt_ePIC_17[51-2] = 0.22;
-  kin_eta[51-3] = -2.0; kin_pt_ePIC_14[51-3] = 0.13; kin_pt_ePIC_17[51-3] = 0.22;
-  kin_eta[51-3] = -2.0; kin_pt_ePIC_14[51-3] = 0.07; kin_pt_ePIC_17[51-3] = 0.16;
-  kin_eta[51-3] = -1.5; kin_pt_ePIC_14[51-3] = 0.07; kin_pt_ePIC_17[51-3] = 0.16;
-  kin_eta[51-4] = -1.5; kin_pt_ePIC_14[51-4] = 0.15; kin_pt_ePIC_17[51-4] = 0.3;
-  kin_eta[51-5] = -1.0; kin_pt_ePIC_14[51-5] = 0.15; kin_pt_ePIC_17[51-5] = 0.3;
+  kin_eta[51-0] = -3.0; kin_pt_ePIC_14[51-0] = 0.20; kin_pt_ePIC_17[51-0] = 0.20;
+  kin_eta[51-1] = -2.5; kin_pt_ePIC_14[51-1] = 0.20; kin_pt_ePIC_17[51-1] = 0.20;
+  kin_eta[51-2] = -2.5; kin_pt_ePIC_14[51-2] = 0.20; kin_pt_ePIC_17[51-2] = 0.20;
+  kin_eta[51-3] = -2.0; kin_pt_ePIC_14[51-3] = 0.20; kin_pt_ePIC_17[51-3] = 0.20;
+  kin_eta[51-3] = -2.0; kin_pt_ePIC_14[51-3] = 0.20; kin_pt_ePIC_17[51-3] = 0.20;
+  kin_eta[51-3] = -1.5; kin_pt_ePIC_14[51-3] = 0.20; kin_pt_ePIC_17[51-3] = 0.20;
+  kin_eta[51-4] = -1.5; kin_pt_ePIC_14[51-4] = 0.20; kin_pt_ePIC_17[51-4] = 0.20;
+  kin_eta[51-5] = -1.0; kin_pt_ePIC_14[51-5] = 0.20; kin_pt_ePIC_17[51-5] = 0.20;
 
   for (int ibin = 0; ibin < 52; ++ibin)
   {
@@ -112,8 +112,8 @@ void set_tracking_limits()
   kin_tracking_ePIC_17 = new TGraph(52,kin_p_ePIC_17,kin_eta);
   kin_tracking_ePIC_17->SetLineWidth(2);
   kin_tracking_ePIC_17->SetLineStyle(2);
-  kin_tracking_ePIC_17->SetLineColor(kGray+2);
-  kin_tracking_ePIC_17->SetMarkerColor(kGray+2);
+  kin_tracking_ePIC_17->SetLineColor(kViolet+1);
+  kin_tracking_ePIC_17->SetMarkerColor(kViolet+1);
 }
 
 void set_PID_limits(const int option = 1)
@@ -258,11 +258,11 @@ void plot_D0_decay(const int smear_option = 2, const int bfield_option = 0, cons
             line1->Draw("same");
             line2->Draw("same");
 
-            // kin_tracking_ePIC_17->Draw("same");
+            kin_tracking_ePIC_17->Draw("same");
             // kin_tracking_ePIC_14->Draw("same");
 
             kin_DIRC_ePIC_17->Draw("same");
-            kin_DIRC_ePIC_14->Draw("same");
+            // kin_DIRC_ePIC_14->Draw("same");
 
             line_pi_DIRC->Draw("same");
             line_pi_dRICH_h->Draw("same");
@@ -283,11 +283,11 @@ void plot_D0_decay(const int smear_option = 2, const int bfield_option = 0, cons
             line1->Draw("same");
             line2->Draw("same");
 
-            // kin_tracking_ePIC_17->Draw("same");
+            kin_tracking_ePIC_17->Draw("same");
             // kin_tracking_ePIC_14->Draw("same");
 
             kin_DIRC_ePIC_17->Draw("same");
-            kin_DIRC_ePIC_14->Draw("same");
+            // kin_DIRC_ePIC_14->Draw("same");
 
             line_K_DIRC->Draw("same");
             line_K_dRICH_h->Draw("same");
@@ -302,8 +302,8 @@ void plot_D0_decay(const int smear_option = 2, const int bfield_option = 0, cons
             leg1->SetFillStyle(0);
             leg1->SetMargin(0.2);
 
-            leg1->AddEntry(kin_DIRC_ePIC_17,"low p limit to reach DIRC (1.7T)","l");
-            leg1->AddEntry(kin_DIRC_ePIC_14,"low p limit to reach DIRC (1.4T)","l");
+            leg1->AddEntry(kin_DIRC_ePIC_17,"low p limit to reach DIRC+TOF","l");
+            leg1->AddEntry(kin_tracking_ePIC_17,"p_{T} > 0.2GeV","l");
             leg1->Draw("same");
 
             TLegend* leg2 = new TLegend(0.63,0.73,0.86,0.83);
@@ -433,11 +433,11 @@ void plot_Lc_decay(const int smear_option = 2, const int bfield_option = 0, cons
             line1->Draw("same");
             line2->Draw("same");
 
-            // kin_tracking_ePIC_17->Draw("same");
+            kin_tracking_ePIC_17->Draw("same");
             // kin_tracking_ePIC_14->Draw("same");
 
             kin_DIRC_ePIC_17->Draw("same");
-            kin_DIRC_ePIC_14->Draw("same");
+            // kin_DIRC_ePIC_14->Draw("same");
 
             line_pi_DIRC->Draw("same");
             line_pi_dRICH_h->Draw("same");
@@ -459,7 +459,7 @@ void plot_Lc_decay(const int smear_option = 2, const int bfield_option = 0, cons
             line2->Draw("same");
 
             kin_DIRC_ePIC_17->Draw("same");
-            kin_DIRC_ePIC_14->Draw("same");
+            // kin_DIRC_ePIC_14->Draw("same");
 
             line_K_DIRC->Draw("same");
             line_K_dRICH_h->Draw("same");
@@ -480,11 +480,11 @@ void plot_Lc_decay(const int smear_option = 2, const int bfield_option = 0, cons
             line1->Draw("same");
             line2->Draw("same");
 
-            // kin_tracking_ePIC_17->Draw("same");
+            kin_tracking_ePIC_17->Draw("same");
             // kin_tracking_ePIC_14->Draw("same");
 
             kin_DIRC_ePIC_17->Draw("same");
-            kin_DIRC_ePIC_14->Draw("same");
+            // kin_DIRC_ePIC_14->Draw("same");
 
             line_K_DIRC->Draw("same");
             line_K_dRICH_h->Draw("same");
@@ -499,8 +499,8 @@ void plot_Lc_decay(const int smear_option = 2, const int bfield_option = 0, cons
             leg1->SetFillStyle(0);
             leg1->SetMargin(0.2);
 
-            leg1->AddEntry(kin_DIRC_ePIC_17,"low p limit to reach DIRC (1.7T)","l");
-            leg1->AddEntry(kin_DIRC_ePIC_14,"low p limit to reach DIRC (1.4T)","l");
+            leg1->AddEntry(kin_DIRC_ePIC_17,"low p limit to reach DIRC+TOF","l");
+            leg1->AddEntry(kin_tracking_ePIC_17,"p_{T} > 0.2GeV","l");
             leg1->Draw("same");
 
             TLegend* leg2 = new TLegend(0.42,0.72,0.65,0.82);
