@@ -9,6 +9,104 @@ TH1F* VertexRes_X = NULL;
 TH1F* VertexRes_Y = NULL;
 TH1F* VertexRes_Z = NULL;
 
+void setup_EPIC_single_track_smearing(TFile* fin)
+{
+  cout << "Current max eta bin is " << NETA_MAX << ", adjust it inside fastsim.h when neccesary" << endl;
+
+  if (!fin)
+  {
+    cout << "Cannot find the EPIC setup file, abort..." << endl;
+    exit(0);
+  }
+
+  Res_Handler = (TH1F*)fin->Get("Res_Handler");
+  if (!Res_Handler)
+  {
+    cout << "No Res_Handler found, abort..." << endl;
+    exit(0);
+  }
+
+  for(int ibin = 0; ibin < Res_Handler->GetNbinsX(); ibin++)
+  {
+    gmom_res[ibin] = (TGraph*)fin->Get(Form("gmom_res_%i",ibin));
+    gdca_rphi_res[ibin] = (TGraph*)fin->Get(Form("gdca_rphi_res_%i",ibin));
+    gdca_z_res[ibin] = (TGraph*)fin->Get(Form("gdca_z_res_%i",ibin));
+  }
+}
+
+bool passTrackingEPIC(double p, double eta)
+{ // NB: this range is just what's provided by Ernst
+  if (fabs(eta)>3.0) return false;
+  if (p<0.2) return false;
+  if (p>100) return false; 
+  return true;
+}
+
+TLorentzVector smearMomEPIC(TLorentzVector const& mom4)
+{ // takes true 4-momentum mom4 as input, return smeared 4-momentum sMom4
+  TLorentzVector sMom4;
+  sMom4.SetXYZM(-9999,-9999,-9999,0);
+
+  int smear_graph_bin = Res_Handler->FindBin(mom4.PseudoRapidity());
+  if (smear_graph_bin<1) return sMom4; // if not valid bin
+  if (!gmom_res[smear_graph_bin-1]) return sMom4; // if no smearing parameter found
+
+  float const pt = mom4.Perp();
+  float const p = mom4.P();
+  float const eta = mom4.PseudoRapidity();
+
+  if (!passTrackingEPIC(p,eta)) return sMom4; // if track not in acceptance
+
+  float rel_p_reso = gmom_res[smear_graph_bin-1]->Eval(p); // in unit of 1
+  float p_reso = p*rel_p_reso;
+
+  float sP = gRandom->Gaus(p,p_reso);
+  float sPt = sP*TMath::Sin(mom4.Theta());
+
+  // cout << "p " << p << " p_reso " << p_reso << " smeared p " << sP << " GeV" << endl;
+
+  sMom4.SetXYZM(sPt * cos(mom4.Phi()), sPt * sin(mom4.Phi()), sPt * sinh(eta), mom4.M());
+  return sMom4; 
+}
+
+TVector3 smearPosEPIC(TVector3 const& mom, TVector3 const& pos)
+{ // takes true mom and vertex position vector as input, return smeared vertex position sPos
+  TVector3 sPos(-9999,-9999,-9999);
+
+  int smear_graph_bin = Res_Handler->FindBin(mom.PseudoRapidity());
+  if (smear_graph_bin<1) return sPos; // if not valid bin
+  if (!gdca_rphi_res[smear_graph_bin-1]) return sPos; // if no smearing parameter found
+  if (!gdca_z_res[smear_graph_bin-1]) return sPos; // if no smearing parameter found
+
+  float const pt = mom.Perp();
+  float const p = mom.Mag();
+  float const eta =  TMath::ATanH(mom.Pz()/mom.Mag());//Doing it this way to suppress TVector3 warnings; depends on any pre-cuts
+
+  if (!passTrackingEPIC(p,eta)) return sPos;
+
+  // resolutions are in microns, need in mm
+  float dca_rphi_reso = gdca_rphi_res[smear_graph_bin-1]->Eval(p); // in unit of um
+  float dca_z_reso = gdca_z_res[smear_graph_bin-1]->Eval(p); // in unit of um
+  dca_rphi_reso /= 1E3; // convert to mm
+  dca_z_reso /= 1E3;
+
+  float rand_xy = gRandom->Gaus(0,dca_rphi_reso);
+  float rand_z = gRandom->Gaus(0,dca_z_reso);
+
+  // cout << "pos " << pos.X() << ", " << pos.Y() << " mm " << " rand_xy " << rand_xy << " mm" << endl;
+
+  // calculate new vertex position in transverse plane
+  sPos.SetXYZ(pos.X(),pos.Y(),0);
+  TVector3 momPerp(-mom.Y(), mom.X(), 0.0);
+  sPos -= momPerp.Unit() * rand_xy;
+
+  // cout << "smeared pos " << sPos.X() << ", " << sPos.Y() << " mm" << endl;
+
+  // add back the z dimension
+  sPos.SetZ(pos.Z() + rand_z);
+  return sPos;
+}
+
 void setup_ATHENA_single_track_smearing(TFile* fin)
 {
   cout << "Current max eta bin is " << NETA_MAX << ", adjust it inside fastsim.h when neccesary" << endl;
@@ -535,7 +633,7 @@ void passing_eside_dRICH(TLorentzVector const& mom4, bitset<4>& binary_id, const
   if (eta>=-1 || eta<-4) return; // no new info added from dRICH since particle does not hit it
 
   float p = mom4.P();
-  if (thrd_option)
+  if (thrd_option==0)
   {
     if (p>0.00245) binary_id[0] = 1; // e fired
     if (p>0.69) binary_id[1] = 1; // pi fired
