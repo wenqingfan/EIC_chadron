@@ -138,7 +138,7 @@ class D0_reco
 
     // decay products (parent particle in pt bin, decay particle saved in p versus eta)
     TH2D* h2d_K_D0_p_vs_eta[etabin][pptbin];
-    TH2D* h2d_pi_D0_p_vs_eta[etabin][pptbin];
+    TH2D* h2d_pi_D0_p_vs_eta[etabin][pptbin]; 
 
     // kinematics of D0 in Q2 and x bins
     TH2D* h2d_D0_pt_vs_eta[Q2bin][xbin];
@@ -751,11 +751,11 @@ class D0_reco
 
           if (ID_OPTION==1)
           { // PID with low momentum cutoff & some mis-identified pi, K
-            if (posl_prob_pi[ipos]==1 && negl_prob_K[ineg]>0.5)
+            if (posl_prob_pi[ipos]>0.5 && negl_prob_K[ineg]>0.5)
             {
               fill_Kpi_mass(0,ineg,ipos);
             }
-            if (negl_prob_pi[ineg]==1 && posl_prob_K[ipos]>0.5)
+            if (negl_prob_pi[ineg]>0.5 && posl_prob_K[ipos]>0.5)
             {
               fill_Kpi_mass(1,ipos,ineg);
             }
@@ -1727,11 +1727,12 @@ class Lc_reco
     }
 };
 
-void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, const int smear_option = 0, const int Bfield_type = 0, const int PID_option = 0, const int dca_option = 0, const int thrd_option = 0)
-{ // smear_2nd_vtx & momentum: 0--no smearing, 1--DM smearing, 2--LBL smearing, 3--Hybrid smearing, 4--ATHENA smearing, 5-- ePIC smearing
+void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, const int smear_option = 0, const int Bfield_type = 0, const int PID_option = 0, const int dca_option = 0, const float pt_thrd = 0.2)
+{ // smear_2nd_vtx & momentum: 0--no smearing, 1--DM smearing, 2--LBL smearing, 3--Hybrid smearing, 4--ATHENA smearing, 5-- ePIC smearing, 6-- ePIC smearing (kaons treated separately)
   // Bfield_type: 0--Barbar, 1--Beast, 2--ePIC (ePIC is 1.7T, which is not a valid option for some of the smearing settings)
   // 0--no hID (but with eID), 1--PID with no low momentum cutoff, 2--PID with low momentum cutoff & some mis-identified pi, K, 3--PID with low momentum cutoff & all identified pi, K
-  // DCA_cut: SetDCACuts()--cut on DCA
+  // dca_option: 0--no DCA cuts, 1--with DCA cuts (SetDCACuts())
+  // pt_thrd: set the pt threshold for single tracks used in the reconstruction, above which a 100% tracking efficiency is assumed (NB: for now if using smearing_option==6, then better set pt_thrd>=0.3)
 
   // PDG data table
   pdg = new TDatabasePDG();
@@ -1773,21 +1774,27 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
     cout << "Setup epic smearing parameters" << endl;
     setup_EPIC_single_track_smearing(f_epic_tracks);
   }
+  TFile* f_epic_kaons = new TFile("ePIC_resolutions_kaons.root","READ");
+  if (smear_option==6)
+  { 
+    cout << "Setup epic smearing parameters" << endl;
+    setup_EPIC_single_kaon_smearing(f_epic_kaons);
+  }
 
   //Define Some Variables
   Float_t Q2(0);
   Int_t nParticles(0);
 
   D0_reco ana_D0;
-  ana_D0.SetLowPt(0.2);
-  ana_D0.SetDCACuts();
+  ana_D0.SetLowPt(pt_thrd);
+  if (dca_option!=0) ana_D0.SetDCACuts();
   ana_D0.SetIDCuts(PID_option);
   ana_D0.SetSmearType(smear_option);
   ana_D0.SetBFieldType(Bfield_type);
 
   Lc_reco ana_Lc;
-  ana_Lc.SetLowPt(0.2);
-  ana_Lc.SetDCACuts();
+  ana_Lc.SetLowPt(pt_thrd);
+  if (dca_option!=0) ana_Lc.SetDCACuts();
   ana_Lc.SetIDCuts(PID_option);
   ana_Lc.SetSmearType(smear_option);
   ana_Lc.SetBFieldType(Bfield_type);
