@@ -1559,11 +1559,11 @@ class Lc_reco
 
             if (ID_OPTION==1)
             { // PID with low momentum cutoff & some mis-identified K, p
-              if (negl_prob_K[ineg]>0.5 && posl_prob_pi[ipos1]==1 && posl_prob_p[ipos2]>0.1)
+              if (negl_prob_K[ineg]>0.5 && posl_prob_pi[ipos1]>0.5 && posl_prob_p[ipos2]>0.5)
               { // K-pi+p+
                 fill_Kpip_mass(0,0,ineg,ipos1,ipos2);
               }
-              if (negl_prob_K[ineg]>0.5 && posl_prob_p[ipos1]>0.1 && posl_prob_pi[ipos2]==1)
+              if (negl_prob_K[ineg]>0.5 && posl_prob_p[ipos1]>0.5 && posl_prob_pi[ipos2]>0.5)
               { // K-p+pi+
                 fill_Kpip_mass(0,1,ineg,ipos1,ipos2);
               }
