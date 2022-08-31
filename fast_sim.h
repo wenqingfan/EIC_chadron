@@ -11,7 +11,7 @@ TH1F* VertexRes_Y = NULL;
 TH1F* VertexRes_Z = NULL;
 
 // EPIC single kaon smearing
-TH1F* Res_Handler = NULL;
+TH1F* Res_Handler_kaon = NULL;
 TGraph *gmom_res_kaon[NETA_MAX];
 TGraph *gdca_rphi_res_kaon[NETA_MAX];
 TGraph *gdca_z_res_kaon[NETA_MAX];
