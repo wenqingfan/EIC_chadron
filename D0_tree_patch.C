@@ -751,11 +751,11 @@ class D0_reco
 
           if (ID_OPTION==1)
           { // PID with low momentum cutoff & some mis-identified pi, K
-            if (posl_prob_pi[ipos]>0.5 && negl_prob_K[ineg]>0.5)
+            if (posl_prob_pi[ipos]>0.7 && negl_prob_K[ineg]>0.5)
             {
               fill_Kpi_mass(0,ineg,ipos);
             }
-            if (negl_prob_pi[ineg]>0.5 && posl_prob_K[ipos]>0.5)
+            if (negl_prob_pi[ineg]>0.7 && posl_prob_K[ipos]>0.5)
             {
               fill_Kpi_mass(1,ipos,ineg);
             }
@@ -1559,11 +1559,11 @@ class Lc_reco
 
             if (ID_OPTION==1)
             { // PID with low momentum cutoff & some mis-identified K, p
-              if (negl_prob_K[ineg]>0.5 && posl_prob_pi[ipos1]>0.5 && posl_prob_p[ipos2]>0.5)
+              if (negl_prob_K[ineg]>0.5 && posl_prob_pi[ipos1]>0.7 && posl_prob_p[ipos2]>0.1)
               { // K-pi+p+
                 fill_Kpip_mass(0,0,ineg,ipos1,ipos2);
               }
-              if (negl_prob_K[ineg]>0.5 && posl_prob_p[ipos1]>0.5 && posl_prob_pi[ipos2]>0.5)
+              if (negl_prob_K[ineg]>0.5 && posl_prob_p[ipos1]>0.1 && posl_prob_pi[ipos2]>0.7)
               { // K-p+pi+
                 fill_Kpip_mass(0,1,ineg,ipos1,ipos2);
               }
@@ -1651,11 +1651,11 @@ class Lc_reco
 
             if (ID_OPTION==1)
             { // PID with low momentum cutoff & some mis-identified K, p
-              if (posl_prob_K[ipos]>0.5 && negl_prob_pi[ineg1]==1 && negl_prob_p[ineg2]>0.1)
+              if (posl_prob_K[ipos]>0.5 && negl_prob_pi[ineg1]>0.7 && negl_prob_p[ineg2]>0.1)
               { // K+pi-p-
                 fill_Kpip_mass(1,0,ipos,ineg1,ineg2);
               }
-              if (posl_prob_K[ipos]>0.5 && negl_prob_p[ineg1]>0.1 && negl_prob_pi[ineg2]==1)
+              if (posl_prob_K[ipos]>0.5 && negl_prob_p[ineg1]>0.1 && negl_prob_pi[ineg2]>0.7)
               { // K+p-pi-
                 fill_Kpip_mass(1,1,ipos,ineg1,ineg2);
               }
