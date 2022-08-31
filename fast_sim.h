@@ -1,13 +1,20 @@
-// ATHENA single track smearing
+// ATHENA or EPIC single track smearing
 const int NETA_MAX = 500;
 TH1F* Res_Handler = NULL;
 TGraph *gmom_res[NETA_MAX];
 TGraph *gdca_rphi_res[NETA_MAX];
 TGraph *gdca_z_res[NETA_MAX];
-// ATHENA primary vertex smearing
+
+// ATHENA== primary vertex smearing
 TH1F* VertexRes_X = NULL;
 TH1F* VertexRes_Y = NULL;
 TH1F* VertexRes_Z = NULL;
+
+// EPIC single kaon smearing
+TH1F* Res_Handler = NULL;
+TGraph *gmom_res_kaon[NETA_MAX];
+TGraph *gdca_rphi_res_kaon[NETA_MAX];
+TGraph *gdca_z_res_kaon[NETA_MAX];
 
 void setup_EPIC_single_track_smearing(TFile* fin)
 {
@@ -20,6 +27,7 @@ void setup_EPIC_single_track_smearing(TFile* fin)
   }
 
   Res_Handler = (TH1F*)fin->Get("Res_Handler");
+  Res_Handler->SetName( Form("%s_pi",Res_Handler->GetName()) );
   if (!Res_Handler)
   {
     cout << "No Res_Handler found, abort..." << endl;
@@ -29,8 +37,11 @@ void setup_EPIC_single_track_smearing(TFile* fin)
   for(int ibin = 0; ibin < Res_Handler->GetNbinsX(); ibin++)
   {
     gmom_res[ibin] = (TGraph*)fin->Get(Form("gmom_res_%i",ibin));
+    gmom_res[ibin]->SetName( Form("%s_pi",gmom_res[ibin]->GetName()) );
     gdca_rphi_res[ibin] = (TGraph*)fin->Get(Form("gdca_rphi_res_%i",ibin));
+    gdca_rphi_res[ibin]->SetName( Form("%s_pi",gdca_rphi_res[ibin]->GetName()) );
     gdca_z_res[ibin] = (TGraph*)fin->Get(Form("gdca_z_res_%i",ibin));
+    gdca_z_res[ibin]->SetName( Form("%s_pi",gdca_z_res[ibin]->GetName()) );
   }
 }
 
@@ -87,6 +98,108 @@ TVector3 smearPosEPIC(TVector3 const& mom, TVector3 const& pos)
   // resolutions are in microns, need in mm
   float dca_rphi_reso = gdca_rphi_res[smear_graph_bin-1]->Eval(p); // in unit of um
   float dca_z_reso = gdca_z_res[smear_graph_bin-1]->Eval(p); // in unit of um
+  dca_rphi_reso /= 1E3; // convert to mm
+  dca_z_reso /= 1E3;
+
+  float rand_xy = gRandom->Gaus(0,dca_rphi_reso);
+  float rand_z = gRandom->Gaus(0,dca_z_reso);
+
+  // cout << "pos " << pos.X() << ", " << pos.Y() << " mm " << " rand_xy " << rand_xy << " mm" << endl;
+
+  // calculate new vertex position in transverse plane
+  sPos.SetXYZ(pos.X(),pos.Y(),0);
+  TVector3 momPerp(-mom.Y(), mom.X(), 0.0);
+  sPos -= momPerp.Unit() * rand_xy;
+
+  // cout << "smeared pos " << sPos.X() << ", " << sPos.Y() << " mm" << endl;
+
+  // add back the z dimension
+  sPos.SetZ(pos.Z() + rand_z);
+  return sPos;
+}
+
+void setup_EPIC_single_kaon_smearing(TFile* fin)
+{
+  cout << "Current max eta bin is " << NETA_MAX << ", adjust it inside fastsim.h when neccesary" << endl;
+
+  if (!fin)
+  {
+    cout << "Cannot find the EPIC kaon setup file, abort..." << endl;
+    exit(0);
+  }
+
+  Res_Handler_kaon = (TH1F*)fin->Get("Res_Handler");
+  Res_Handler_kaon->SetName( Form("%s_K",Res_Handler->GetName()) );
+  if (!Res_Handler_kaon)
+  {
+    cout << "No Res_Handler found, abort..." << endl;
+    exit(0);
+  }
+
+  for(int ibin = 0; ibin < Res_Handler->GetNbinsX(); ibin++)
+  {
+    gmom_res_kaon[ibin] = (TGraph*)fin->Get(Form("gmom_res_%i",ibin));
+    gmom_res_kaon[ibin]->SetName( Form("%s_K",gmom_res_kaon[ibin]->GetName()) );
+    gdca_rphi_res_kaon[ibin] = (TGraph*)fin->Get(Form("gdca_rphi_res_%i",ibin));
+    gdca_rphi_res_kaon[ibin]->SetName( Form("%s_K",gdca_rphi_res_kaon[ibin]->GetName()) );
+    gdca_z_res_kaon[ibin] = (TGraph*)fin->Get(Form("gdca_z_res_%i",ibin));
+    gdca_z_res_kaon[ibin]->SetName( Form("%s_K",gdca_z_res_kaon[ibin]->GetName()) );
+  }
+}
+
+bool passKaonTrackingEPIC(double p, double eta)
+{ // NB: this range is just what's provided by Ernst, and because of technical issues the low pt limit is higher for kaons (0.3GeV)
+  if (fabs(eta)>3.0) return false;
+  if (p<0.3) return false;
+  if (p>100) return false; 
+  return true;
+}
+
+TLorentzVector smearKaonMomEPIC(TLorentzVector const& mom4)
+{ // takes true 4-momentum mom4 as input, return smeared 4-momentum sMom4
+  TLorentzVector sMom4;
+  sMom4.SetXYZM(-9999,-9999,-9999,0);
+
+  int smear_graph_bin = Res_Handler_kaon->FindBin(mom4.PseudoRapidity());
+  if (smear_graph_bin<1) return sMom4; // if not valid bin
+  if (!gmom_res_kaon[smear_graph_bin-1]) return sMom4; // if no smearing parameter found
+
+  float const pt = mom4.Perp();
+  float const p = mom4.P();
+  float const eta = mom4.PseudoRapidity();
+
+  if (!passKaonTrackingEPIC(p,eta)) return sMom4; // if track not in acceptance
+
+  float rel_p_reso = gmom_res_kaon[smear_graph_bin-1]->Eval(p); // in unit of 1
+  float p_reso = p*rel_p_reso;
+
+  float sP = gRandom->Gaus(p,p_reso);
+  float sPt = sP*TMath::Sin(mom4.Theta());
+
+  // cout << "p " << p << " p_reso " << p_reso << " smeared p " << sP << " GeV" << endl;
+
+  sMom4.SetXYZM(sPt * cos(mom4.Phi()), sPt * sin(mom4.Phi()), sPt * sinh(eta), mom4.M());
+  return sMom4; 
+}
+
+TVector3 smearKaonPosEPIC(TVector3 const& mom, TVector3 const& pos)
+{ // takes true mom and vertex position vector as input, return smeared vertex position sPos
+  TVector3 sPos(-9999,-9999,-9999);
+
+  int smear_graph_bin = Res_Handler_kaon->FindBin(mom.PseudoRapidity());
+  if (smear_graph_bin<1) return sPos; // if not valid bin
+  if (!gdca_rphi_res_kaon[smear_graph_bin-1]) return sPos; // if no smearing parameter found
+  if (!gdca_z_res_kaon[smear_graph_bin-1]) return sPos; // if no smearing parameter found
+
+  float const pt = mom.Perp();
+  float const p = mom.Mag();
+  float const eta =  TMath::ATanH(mom.Pz()/mom.Mag());//Doing it this way to suppress TVector3 warnings; depends on any pre-cuts
+
+  if (!passKaonTrackingEPIC(p,eta)) return sPos;
+
+  // resolutions are in microns, need in mm
+  float dca_rphi_reso = gdca_rphi_res_kaon[smear_graph_bin-1]->Eval(p); // in unit of um
+  float dca_z_reso = gdca_z_res_kaon[smear_graph_bin-1]->Eval(p); // in unit of um
   dca_rphi_reso /= 1E3; // convert to mm
   dca_z_reso /= 1E3;
 

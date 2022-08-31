@@ -465,6 +465,19 @@ class D0_reco
           track_mom4_reco = smearMomEPIC(track_mom4_true);
           track_vtx_reco = smearPosEPIC(track_mom4_true.Vect(), track_vtx_true);
         }
+        if (SMEAR_OPTION==6)
+        {
+          if (abs(part->Id())==321)
+          { // separate smearing for kaons
+            track_mom4_reco = smearKaonMomEPIC(track_mom4_true);
+            track_vtx_reco = smearKaonPosEPIC(track_mom4_true.Vect(), track_vtx_true);
+          }
+          else
+          { // using pion parameter for all the rest of the charged particles
+            track_mom4_reco = smearMomEPIC(track_mom4_true);
+            track_vtx_reco = smearPosEPIC(track_mom4_true.Vect(), track_vtx_true);
+          }
+        }
         if (track_mom4_reco.E()>1000 || track_vtx_reco.Mag()>1000) continue; // outside eta or momentum range
 
         // single track DCA cut
@@ -1714,7 +1727,7 @@ class Lc_reco
     }
 };
 
-void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, const int smear_option = 0, const int Bfield_type = 0, const int PID_option = 0)
+void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char* outFile = "hist.root", int nevt = 0, const int smear_option = 0, const int Bfield_type = 0, const int PID_option = 0, const int dca_option = 0, const int thrd_option = 0)
 { // smear_2nd_vtx & momentum: 0--no smearing, 1--DM smearing, 2--LBL smearing, 3--Hybrid smearing, 4--ATHENA smearing, 5-- ePIC smearing
   // Bfield_type: 0--Barbar, 1--Beast, 2--ePIC (ePIC is 1.7T, which is not a valid option for some of the smearing settings)
   // 0--no hID (but with eID), 1--PID with no low momentum cutoff, 2--PID with low momentum cutoff & some mis-identified pi, K, 3--PID with low momentum cutoff & all identified pi, K
