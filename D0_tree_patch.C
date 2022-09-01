@@ -739,11 +739,11 @@ class D0_reco
 
           if (ID_OPTION==0)
           { // PID with no low momentum cutoff
-            if (posl_prob_pi[ipos]==1 && negl_prob_K[ineg]==1)
+            if (posl_prob_pi[ipos]>0.95 && negl_prob_K[ineg]>0.95)
             {
               fill_Kpi_mass(0,ineg,ipos);
             }
-            if (negl_prob_pi[ineg]==1 && posl_prob_K[ipos]==1)
+            if (negl_prob_pi[ineg]>0.95 && posl_prob_K[ipos]>0.95)
             {
               fill_Kpi_mass(1,ipos,ineg);
             }
@@ -763,11 +763,11 @@ class D0_reco
 
           if (ID_OPTION==2)
           { // PID with low momentum cutoff & all identified pi, K
-            if (posl_prob_pi[ipos]==1 && negl_prob_K[ineg]==1)
+            if (posl_prob_pi[ipos]>0.95 && negl_prob_K[ineg]>0.95)
             {
               fill_Kpi_mass(0,ineg,ipos);
             }
-            if (negl_prob_pi[ineg]==1 && posl_prob_K[ipos]==1)
+            if (negl_prob_pi[ineg]>0.95 && posl_prob_K[ipos]>0.95)
             {
               fill_Kpi_mass(1,ipos,ineg);
             }
@@ -775,11 +775,11 @@ class D0_reco
 
           if (ID_OPTION==3)
           { // PID with low momentum cutoff & all identified pi, K (DIRC at 50cm)
-            if (posl_prob_pi[ipos]==1 && negl_prob_K[ineg]==1)
+            if (posl_prob_pi[ipos]>0.95 && negl_prob_K[ineg]>0.95)
             {
               fill_Kpi_mass(0,ineg,ipos);
             }
-            if (negl_prob_pi[ineg]==1 && posl_prob_K[ipos]==1)
+            if (negl_prob_pi[ineg]>0.95 && posl_prob_K[ipos]>0.95)
             {
               fill_Kpi_mass(1,ipos,ineg);
             }
@@ -1496,6 +1496,7 @@ class Lc_reco
 
     void FillLcTriplets()
     {
+      // K- paired with pi+, p+
       for (int ineg = 0; ineg < negl_id_true.size(); ++ineg)
       {
         for (int ipos1 = 0; ipos1 < posl_id_true.size(); ++ipos1)
@@ -1546,12 +1547,12 @@ class Lc_reco
 
             if (ID_OPTION==0)
             { // PID with no low momentum cutoff
-              if (negl_prob_K[ineg]==1 && posl_prob_pi[ipos1]==1 && posl_prob_p[ipos2]==1)
+              if (negl_prob_K[ineg]>0.95 && posl_prob_pi[ipos1]>0.95 && posl_prob_p[ipos2]>0.95)
               { // K-pi+p+
                 fill_Kpip_mass(0,0,ineg,ipos1,ipos2);
                 // if (fabs(negl_parent_id_true[ineg])==4122) cout<<"Lambda c"<<endl;
               }
-              if (negl_prob_K[ineg]==1 && posl_prob_p[ipos1]==1 && posl_prob_pi[ipos2]==1)
+              if (negl_prob_K[ineg]>0.95 && posl_prob_p[ipos1]>0.95 && posl_prob_pi[ipos2]>0.95)
               { // K-p+pi+
                 fill_Kpip_mass(0,1,ineg,ipos1,ipos2);
               }
@@ -1571,11 +1572,11 @@ class Lc_reco
 
             if (ID_OPTION==2)
             { // PID with low momentum cutoff & all identified pi, K, p
-              if (negl_prob_K[ineg]==1 && posl_prob_pi[ipos1]==1 && posl_prob_p[ipos2]==1)
+              if (negl_prob_K[ineg]>0.95 && posl_prob_pi[ipos1]>0.95 && posl_prob_p[ipos2]>0.95)
               { // K-pi+p+
                 fill_Kpip_mass(0,0,ineg,ipos1,ipos2);
               }
-              if (negl_prob_K[ineg]==1 && posl_prob_p[ipos1]==1 && posl_prob_pi[ipos2]==1)
+              if (negl_prob_K[ineg]>0.95 && posl_prob_p[ipos1]>0.95 && posl_prob_pi[ipos2]>0.95)
               { // K-p+pi+
                 fill_Kpip_mass(0,1,ineg,ipos1,ipos2);
               }
@@ -1583,11 +1584,11 @@ class Lc_reco
 
             if (ID_OPTION==3)
             { // PID with low momentum cutoff & all identified pi, K, p (DIRC @ 50cm)
-              if (negl_prob_K[ineg]==1 && posl_prob_pi[ipos1]==1 && posl_prob_p[ipos2]==1)
+              if (negl_prob_K[ineg]>0.95 && posl_prob_pi[ipos1]>0.95 && posl_prob_p[ipos2]>0.95)
               { // K-pi+p+
                 fill_Kpip_mass(0,0,ineg,ipos1,ipos2);
               }
-              if (negl_prob_K[ineg]==1 && posl_prob_p[ipos1]==1 && posl_prob_pi[ipos2]==1)
+              if (negl_prob_K[ineg]>0.95 && posl_prob_p[ipos1]>0.95 && posl_prob_pi[ipos2]>0.95)
               { // K-p+pi+
                 fill_Kpip_mass(0,1,ineg,ipos1,ipos2);
               }
@@ -1596,6 +1597,7 @@ class Lc_reco
         }
       }
 
+      // K+ paired with pi-, p-
       for (int ipos = 0; ipos < posl_id_true.size(); ++ipos)
       {
         for (int ineg1 = 0; ineg1 < negl_id_true.size(); ++ineg1)
@@ -1639,11 +1641,11 @@ class Lc_reco
 
             if (ID_OPTION==0)
             { // PID with no low momentum cutoff
-              if (posl_prob_K[ipos]==1 && negl_prob_pi[ineg1]==1 && negl_prob_p[ineg2]==1)
+              if (posl_prob_K[ipos]>0.95 && negl_prob_pi[ineg1]>0.95 && negl_prob_p[ineg2]>0.95)
               { // K+pi-p-
                 fill_Kpip_mass(1,0,ipos,ineg1,ineg2);
               }
-              if (posl_prob_K[ipos]==1 && negl_prob_p[ineg1]==1 && negl_prob_pi[ineg2]==1)
+              if (posl_prob_K[ipos]>0.95 && negl_prob_p[ineg1]>0.95 && negl_prob_pi[ineg2]>0.95)
               { // K+p-pi-
                 fill_Kpip_mass(1,1,ipos,ineg1,ineg2);
               }
@@ -1663,11 +1665,11 @@ class Lc_reco
 
             if (ID_OPTION==2)
             { // PID with low momentum cutoff & all identified pi, K, p
-              if (posl_prob_K[ipos]==1 && negl_prob_pi[ineg1]==1 && negl_prob_p[ineg2]==1)
+              if (posl_prob_K[ipos]>0.95 && negl_prob_pi[ineg1]>0.95 && negl_prob_p[ineg2]>0.95)
               { // K-pi+p+
                 fill_Kpip_mass(1,0,ipos,ineg1,ineg2);
               }
-              if (posl_prob_K[ipos]==1 && negl_prob_p[ineg1]==1 && negl_prob_pi[ineg2]==1)
+              if (posl_prob_K[ipos]>0.95 && negl_prob_p[ineg1]>0.95 && negl_prob_pi[ineg2]>0.95)
               { // K-p+pi+
                 fill_Kpip_mass(1,1,ipos,ineg1,ineg2);
               }
@@ -1675,11 +1677,11 @@ class Lc_reco
 
             if (ID_OPTION==3)
             { // PID with low momentum cutoff & all identified pi, K, p (DIRC @ 50cm)
-              if (posl_prob_K[ipos]==1 && negl_prob_pi[ineg1]==1 && negl_prob_p[ineg2]==1)
+              if (posl_prob_K[ipos]>0.95 && negl_prob_pi[ineg1]>0.95 && negl_prob_p[ineg2]>0.95)
               { // K-pi+p+
                 fill_Kpip_mass(1,0,ipos,ineg1,ineg2);
               }
-              if (posl_prob_K[ipos]==1 && negl_prob_p[ineg1]==1 && negl_prob_pi[ineg2]==1)
+              if (posl_prob_K[ipos]>0.95 && negl_prob_p[ineg1]>0.95 && negl_prob_pi[ineg2]>0.95)
               { // K-p+pi+
                 fill_Kpip_mass(1,1,ipos,ineg1,ineg2);
               }
