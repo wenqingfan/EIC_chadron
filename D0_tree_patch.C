@@ -1213,6 +1213,19 @@ class Lc_reco
           track_mom4_reco = smearMomEPIC(track_mom4_true);
           track_vtx_reco = smearPosEPIC(track_mom4_true.Vect(), track_vtx_true);
         }
+        if (SMEAR_OPTION==6)
+        {
+          if (abs(part->Id())==321)
+          { // separate smearing for kaons
+            track_mom4_reco = smearKaonMomEPIC(track_mom4_true);
+            track_vtx_reco = smearKaonPosEPIC(track_mom4_true.Vect(), track_vtx_true);
+          }
+          else
+          { // using pion parameter for all the rest of the charged particles
+            track_mom4_reco = smearMomEPIC(track_mom4_true);
+            track_vtx_reco = smearPosEPIC(track_mom4_true.Vect(), track_vtx_true);
+          }
+        }
         if (track_mom4_reco.E()>1000 || track_vtx_reco.Mag()>1000) continue; // outside eta or momentum range
 
         // single track DCA cut
@@ -1771,7 +1784,7 @@ void D0_tree_patch(const char* inFile = "ep_allQ2.20x100.small.root", const char
   }
   // EPIC smeaing
   TFile* f_epic_tracks = new TFile("ePIC_resolutions.root","READ");
-  if (smear_option==5)
+  if (smear_option==5 || smear_option==6)
   { // NB: no PV smearing available for ePIC smearing yet
     cout << "Setup epic smearing parameters" << endl;
     setup_EPIC_single_track_smearing(f_epic_tracks);
